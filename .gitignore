@@ -1,0 +1,51 @@
+# --- IDE & JetBrains ---
+.idea/
+*.iml
+.kotlin/
+.gradle/
+local.properties
+.DS_Store
+captures/
+
+# --- Build Outputs (Android/KMP/Compose) ---
+**/build/
+!src/**/build/
+.externalNativeBuild/
+.cxx/
+generated/
+
+# --- iOS Specifics (Xcode) ---
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+**/xcshareddata/WorkspaceSettings.xcsettings
+xcuserdata/
+DerivedData/
+
+# --- Web & Cross-Platform (React/Next.js/Wasm) ---
+node_modules/
+.next/
+out/
+dist/
+*.wasm
+*.map
+
+# --- Security & Credentials (Missão Crítica) ---
+# Jamais subir chaves de produção ou variáveis de ambiente
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.jks
+*.keystore
+security/keys/
+
+# --- Logs & Temp ---
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.turbo/
