@@ -10,6 +10,8 @@ plugins {
     alias(libs.plugins.composeHotReload)
 }
 
+val appPackageName = "org.example.project" // [BLINDAGEM] ÚNICA FONTE DA VERDADE PARA O PACOTE
+
 kotlin {
     androidTarget {
         compilerOptions {
@@ -43,6 +45,8 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
+                // [ARQUITETURA] Este é o código comum.
+                // Proibido adicionar dependências específicas de plataforma (AndroidX, Swing, etc.) aqui.
                 implementation(compose.runtime)
                 implementation(compose.foundation)
                 implementation(compose.material3)
@@ -65,7 +69,7 @@ kotlin {
         val jvmMain by getting {
             dependencies {
                 implementation(compose.desktop.currentOs)
-                implementation(libs.kotlinx.coroutinesSwing)
+                implementation(libs.kotlinx.coroutines.swing)
             }
         }
         val commonTest by getting {
@@ -77,11 +81,11 @@ kotlin {
 }
 
 android {
-    namespace = "org.example.project"
+    namespace = appPackageName // <-- Usar a variável
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "org.example.project"
+        applicationId = appPackageName // <-- Usar a variável
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
@@ -109,13 +113,15 @@ dependencies {
 
 compose.desktop {
     application {
+        // [BLINDAGEM] PONTO DE ENTRADA ÚNICO PARA DESKTOP.
+        // Se o arquivo 'MainKt.kt' for renomeado, ESTA LINHA deve ser atualizada.
+        // Isso previne falhas silenciosas na execução da configuração 'Application'.
         mainClass = "org.example.project.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "org.example.project"
+            packageName = appPackageName // <-- Usar a variável
             packageVersion = "1.0.0"
         }
     }
 }
-
