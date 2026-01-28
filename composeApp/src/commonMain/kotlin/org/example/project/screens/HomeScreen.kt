@@ -33,29 +33,36 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,9 +72,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.example.project.data.MockData.actionsData
@@ -109,7 +118,6 @@ private fun getDrawableResource(name: String): Painter {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen() {
     val isLandscape = isLandscape()
@@ -149,63 +157,69 @@ private fun CarouselCard(imageRes: String, modifier: Modifier = Modifier) {
 }
 
 
-@OptIn(ExperimentalResourceApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PortraitHomeScreen() {
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(HomeScreenDefaults.BackgroundColor)
-            .verticalScroll(rememberScrollState())
+            .background(HomeScreenDefaults.BackgroundColor),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // --- Seção Principal (Carrossel) ---
-        CarouselSection()
+        item {
+            CarouselSection()
+        }
 
-        // --- Conteúdo abaixo do banner ---
-        Column(
-            modifier = Modifier
-                .fillMaxWidth() // Ocupa a largura toda
-                .padding(top = 60.dp, bottom = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Título, Spacer e LazyRow dos e-books (código existente)
-            Text(
-                text = "Nossos Materiais Exclusivos",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF333333) // Cor do texto ajustada para fundo claro
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(24.dp)
+        item {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 60.dp, bottom = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Itens dos e-books (código existente)
-                item {
-                    EbookCard(
-                        imageRes = "ebook_lanches.png",
-                        contentDescription = "Capa do e-book Guia de Lanches Saudáveis",
-                        onDownloadClick = { /* Lógica de download */ }
-                    )
-                }
-                item {
-                    EbookCard(
-                        imageRes = "ebook_terceira_idade.png",
-                        contentDescription = "Capa do e-book Nutrição na Terceira Idade",
-                        onDownloadClick = { /* Lógica de download */ }
-                    )
-                }
-                item {
-                    EbookCard(
-                        imageRes = "ebook_infantil.png",
-                        contentDescription = "Capa do e-book Criança Bem Nutrida, Futuro Saudável",
-                        onDownloadClick = { /* Lógica de download */ }
-                    )
+                Text(
+                    text = "Nossos Materiais Exclusivos",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF333333)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    item {
+                        EbookCard(
+                            imageRes = "ebook_lanches.png",
+                            contentDescription = "Capa do e-book Guia de Lanches Saudáveis",
+                            onDownloadClick = { /* Lógica de download */ }
+                        )
+                    }
+                    item {
+                        EbookCard(
+                            imageRes = "ebook_terceira_idade.png",
+                            contentDescription = "Capa do e-book Nutrição na Terceira Idade",
+                            onDownloadClick = { /* Lógica de download */ }
+                        )
+                    }
+                    item {
+                        EbookCard(
+                            imageRes = "ebook_infantil.png",
+                            contentDescription = "Capa do e-book Criança Bem Nutrida, Futuro Saudável",
+                            onDownloadClick = { /* Lógica de download */ }
+                        )
+                    }
                 }
             }
         }
 
-        ActionsSection()
+        item {
+            ActionsSection() // SEU COMPONENTE EXISTENTE.
+        }
+
+        item {
+            HydrationCalculatorBlock()
+        }
     }
 }
 
@@ -217,7 +231,6 @@ private fun LandscapeHomeScreen() {
             .fillMaxSize()
             .background(HomeScreenDefaults.BackgroundColor)
     ) {
-        // Lado Esquerdo: Banner
         Box(
             modifier = Modifier
                 .fillMaxHeight()
@@ -226,55 +239,79 @@ private fun LandscapeHomeScreen() {
             CarouselSection()
         }
 
-
-        // Lado Direito: Materiais
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxHeight()
-                .weight(1f) // Ocupa os outros 50%
-                .verticalScroll(rememberScrollState()) // Permite scroll no lado direito
+                .weight(1f)
                 .padding(horizontal = 24.dp, vertical = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center // Centraliza verticalmente
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                text = "Nossos Materiais Exclusivos",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF333333) // Cor do texto ajustada para fundo claro
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            // No modo paisagem, LazyRow ainda é a melhor opção.
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Itens dos e-books (código existente)
-                item {
-                    EbookCard(
-                        imageRes = "ebook_lanches.png",
-                        contentDescription = "Capa do e-book Guia de Lanches Saudáveis",
-                        onDownloadClick = { /* Lógica de download */ }
-                    )
-                }
-                item {
-                    EbookCard(
-                        imageRes = "ebook_terceira_idade.png",
-                        contentDescription = "Capa do e-book Nutrição na Terceira Idade",
-                        onDownloadClick = { /* Lógica de download */ }
-                    )
-                }
-                item {
-                    EbookCard(
-                        imageRes = "ebook_infantil.png",
-                        contentDescription = "Capa do e-book Criança Bem Nutrida, Futuro Saudável",
-                        onDownloadClick = { /* Lógica de download */ }
-                    )
+            item {
+                Text(
+                    text = "Nossos Materiais Exclusivos",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF333333)
+                )
+            }
+            item {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    item {
+                        EbookCard(
+                            imageRes = "ebook_lanches.png",
+                            contentDescription = "Capa do e-book Guia de Lanches Saudáveis",
+                            onDownloadClick = { /* Lógica de download */ }
+                        )
+                    }
+                    item {
+                        EbookCard(
+                            imageRes = "ebook_terceira_idade.png",
+                            contentDescription = "Capa do e-book Nutrição na Terceira Idade",
+                            onDownloadClick = { /* Lógica de download */ }
+                        )
+                    }
+                    item {
+                        EbookCard(
+                            imageRes = "ebook_infantil.png",
+                            contentDescription = "Capa do e-book Criança Bem Nutrida, Futuro Saudável",
+                            onDownloadClick = { /* Lógica de download */ }
+                        )
+                    }
                 }
             }
 
-            ActionsSection()
+            item {
+                ActionsSection()
+            }
+
+            item {
+                HydrationCalculatorBlock()
+            }
         }
+    }
+}
+
+@Composable
+private fun HydrationCalculatorBlock() {
+    // --- SEÇÃO DA CALCULADORA DE HIDRATAÇÃO ---
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp) // Aumenta o espaçamento após remover o texto
+    ) {
+        // Título Principal da Seção
+        Text(
+            text = "Calculadora de Hidratação",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF333333) // <<< CORRIGIDO PARA O PADRÃO DE TÍTULO
+        )
+        // O componente da calculadora em si
+        WaterIntakeCalculatorSection()
     }
 }
 
@@ -562,6 +599,237 @@ fun ActionCard(date: String, title: String, description: String, location: Strin
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+// INÍCIO DO NOVO COMPONENTE - SUBSTITUA O ANTIGO COMPLETAMENTE
+
+// Definição de Tipos para clareza e segurança
+private data class AgeBracket(val label: String, val multiplier: Int)
+private enum class AgeGroup { JUNIOR, ADULT_1, ADULT_2, SENIOR }
+
+// Cores e Estilos extraídos do design de referência
+private object CalculatorDefaults {
+    val CardBackground = Color(0xFFFBF5E5)
+    val ButtonColor = Color(0xFF006400) // Verde Correto
+    val TextPrimary = Color(0xFF3D3D3D)
+    val TextSecondary = Color(0xFF5A5A5A)
+    val ResultDisplayBackground = Color(0xFFE9F2F1)
+    val ResultTextColor = Color(0xFF006400) // Verde Correto
+    val BorderColor = Color(0xFFD3B8B8)
+    val SelectedChipColor = Color(0xFF006400) // Verde Correto
+    val UnselectedChipColor = Color.Transparent
+}
+
+@Composable
+private fun WaterIntakeCalculatorSection() {
+    // --- ESTADO DO COMPONENTE ---
+    var weight by remember { mutableStateOf(70) }
+    var selectedAgeGroup by remember { mutableStateOf(AgeGroup.ADULT_2) }
+    var resultLiters by remember { mutableStateOf<Float?>(null) }
+
+    val ageBrackets = mapOf(
+        AgeGroup.JUNIOR to AgeBracket("Jovens (até 17)", 40),
+        AgeGroup.ADULT_1 to AgeBracket("Adultos (18-55)", 35),
+        AgeGroup.ADULT_2 to AgeBracket("Adultos (55-65)", 30),
+        AgeGroup.SENIOR to AgeBracket("Idosos (66+)", 25)
+    )
+
+    // --- ESTRUTURA PRINCIPAL (CARD) ---
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = CalculatorDefaults.CardBackground),
+        border = BorderStroke(1.dp, CalculatorDefaults.BorderColor)
+    ) {
+        // --- NOVO LAYOUT COM DUAS COLUNAS ---
+        Row(
+            modifier = Modifier.padding(vertical = 24.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // --- COLUNA ESQUERDA: CONTROLES ---
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 24.dp, end = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                 // Título Interno
+                Text(
+                    text = "Calcule sua Meta Pessoal",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = CalculatorDefaults.TextPrimary,
+                    textAlign = TextAlign.Center
+                )
+                WeightControl(
+                    weight = weight,
+                    onIncrement = { if (weight < 200) weight++ },
+                    onDecrement = { if (weight > 10) weight-- }
+                )
+                AgeGroupSelector(
+                    ageBrackets = ageBrackets,
+                    selectedGroup = selectedAgeGroup,
+                    onGroupSelected = { selectedAgeGroup = it }
+                )
+                Button(
+                    onClick = {
+                        val multiplier = ageBrackets[selectedAgeGroup]?.multiplier ?: 35
+                        resultLiters = (weight * multiplier) / 1000f
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = CalculatorDefaults.ButtonColor)
+                ) {
+                    Text("CALCULAR META", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            }
+
+            // --- DIVISOR VERTICAL ---
+            Divider(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(1.dp),
+                color = CalculatorDefaults.BorderColor
+            )
+
+            // --- COLUNA DIREITA: RESULTADO ---
+            ResultDisplay(
+                resultLiters = resultLiters,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 12.dp, end = 24.dp)
+            )
+        }
+    }
+}
+// FIM DA SUBSTITUIÇÃO
+
+
+// --- SUBCOMPONENTES PRIVADOS ---
+
+@Composable
+private fun WeightControl(weight: Int, onIncrement: () -> Unit, onDecrement: () -> Unit) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Seu peso (kg):", style = MaterialTheme.typography.bodyLarge, color = CalculatorDefaults.TextSecondary)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            IconButton(onClick = onDecrement, modifier = Modifier.background(CalculatorDefaults.ButtonColor, CircleShape)) {
+                Icon(Icons.Default.Remove, contentDescription = "Diminuir peso", tint = Color.White)
+            }
+            Text(
+                text = weight.toString(),
+                style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold),
+                color = CalculatorDefaults.TextPrimary
+            )
+            IconButton(onClick = onIncrement, modifier = Modifier.background(CalculatorDefaults.ButtonColor, CircleShape)) {
+                Icon(Icons.Default.Add, contentDescription = "Aumentar peso", tint = Color.White)
+            }
+        }
+    }
+}
+
+@Composable
+private fun AgeGroupSelector(
+    ageBrackets: Map<AgeGroup, AgeBracket>,
+    selectedGroup: AgeGroup,
+    onGroupSelected: (AgeGroup) -> Unit
+) {
+    val groups = ageBrackets.entries.toList()
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            "Sua faixa de idade:",
+            style = MaterialTheme.typography.bodyLarge,
+            color = CalculatorDefaults.TextSecondary
+        )
+        // Linha 1 do Grid
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            AgeChip(
+                text = groups[0].value.label,
+                isSelected = selectedGroup == groups[0].key,
+                onClick = { onGroupSelected(groups[0].key) }
+            )
+            AgeChip(
+                text = groups[1].value.label,
+                isSelected = selectedGroup == groups[1].key,
+                onClick = { onGroupSelected(groups[1].key) }
+            )
+        }
+        // Linha 2 do Grid
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            AgeChip(
+                text = groups[2].value.label,
+                isSelected = selectedGroup == groups[2].key,
+                onClick = { onGroupSelected(groups[2].key) }
+            )
+            AgeChip(
+                text = groups[3].value.label,
+                isSelected = selectedGroup == groups[3].key,
+                onClick = { onGroupSelected(groups[3].key) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun AgeChip(text: String, isSelected: Boolean, onClick: () -> Unit) {
+    val backgroundColor = if (isSelected) CalculatorDefaults.SelectedChipColor else CalculatorDefaults.UnselectedChipColor
+    val textColor = if (isSelected) Color.White else CalculatorDefaults.TextSecondary
+    val chipBorder = if (isSelected) BorderStroke(1.dp, Color.Transparent) else BorderStroke(1.dp, CalculatorDefaults.BorderColor)
+
+    OutlinedButton(
+        onClick = onClick,
+        shape = RoundedCornerShape(20.dp),
+        border = chipBorder,
+        colors = ButtonDefaults.outlinedButtonColors(containerColor = backgroundColor)
+    ) {
+        Text(text, color = textColor, fontSize = 12.sp)
+    }
+}
+
+@Composable
+private fun ResultDisplay(resultLiters: Float?, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxHeight(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            "Sua meta diária recomendada é:",
+            style = MaterialTheme.typography.bodyMedium,
+            color = CalculatorDefaults.TextSecondary,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        if (resultLiters == null) {
+            Text(
+                "(Insira seus dados para calcular.)",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray,
+                textAlign = TextAlign.Center
+            )
+        } else {
+            val resultText = ((resultLiters * 100).roundToInt() / 100.0).toString().replace('.', ',')
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    text = resultText,
+                    style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold),
+                    color = CalculatorDefaults.ResultTextColor
+                )
+                Text(
+                    text = " Litros",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = CalculatorDefaults.ResultTextColor,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
             }
         }
     }
