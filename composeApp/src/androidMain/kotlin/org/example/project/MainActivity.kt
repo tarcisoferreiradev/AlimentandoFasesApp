@@ -6,21 +6,18 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.core.view.WindowCompat
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // A função é chamada sem parâmetros para habilitar o modo edge-to-edge
+        // Cria o canal de notificação ao iniciar o app
+        val notificationService = NotificationService(this)
+        notificationService.createNotificationChannel()
+
+        // Apenas habilita o modo edge-to-edge. O controle da aparência
+        // da barra de status será delegado para cada tela individualmente.
         enableEdgeToEdge()
-        
-        WindowCompat.getInsetsController(window, window.decorView).apply {
-            // Define os ícones da barra de status (superior) como claros
-            isAppearanceLightStatusBars = false
-            // Define os ícones da barra de navegação (inferior) como claros
-            isAppearanceLightNavigationBars = false
-        }
 
         setContent {
             App()

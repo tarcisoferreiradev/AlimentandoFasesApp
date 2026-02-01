@@ -12,8 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.ChatBubbleOutline
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
@@ -36,12 +36,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.example.project.navigation.Screen
+import org.example.project.ui.theme.SystemAppearance
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 
 @OptIn(ExperimentalResourceApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
+    // Como as barras de navegação agora têm um fundo claro, garantimos que
+    // os ícones da barra de status do sistema sejam escuros para contraste.
+    SystemAppearance(isLight = true)
+
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Home) }
     val screens = listOf(Screen.Home, Screen.Content, Screen.Community, Screen.Profile)
     val showBottomBar = currentScreen in screens
@@ -50,10 +55,10 @@ fun MainScreen() {
         topBar = {
             if (showBottomBar) {
                 val topBarColors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent, // TopAppBar se mistura com o fundo
-                    scrolledContainerColor = Color.Transparent,
-                    titleContentColor = Color(0xFFE0E0E0),
-                    actionIconContentColor = Color(0xFF38761d)
+                    containerColor = Color(0xFFf9efd4),      // Nova cor de fundo
+                    scrolledContainerColor = Color(0xFFf9efd4),
+                    titleContentColor = Color(0xFF333333),      // Conteúdo escuro para contraste
+                    actionIconContentColor = Color(0xFF333333)
                 )
                 CenterAlignedTopAppBar(
                     title = {
@@ -63,55 +68,38 @@ fun MainScreen() {
                                 contentDescription = "Logo Alimentando Fases",
                                 modifier = Modifier.height(32.dp)
                             )
-                            else -> currentScreen.label?.let { Text(it, color = Color(0xFFE0E0E0)) }
+                            else -> currentScreen.label?.let { Text(it, color = Color(0xFF333333)) }
                         }
                     },
                     actions = {
-                        // ... (o código das Actions permanece o mesmo) ...
                         when (currentScreen) {
                             is Screen.Home -> {
-                                IconButton(onClick = { /* TODO: Handle notifications click */ }) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Notifications,
-                                        contentDescription = "Notificações"
-                                    )
+                                IconButton(onClick = { /* TODO */ }) {
+                                    Icon(Icons.Outlined.Notifications, "Notificações")
                                 }
                             }
                             is Screen.Content -> {
-                                IconButton(onClick = { /* TODO: Handle search */ }) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Search,
-                                        contentDescription = "Pesquisar"
-                                    )
+                                IconButton(onClick = { /* TODO */ }) {
+                                    Icon(Icons.Outlined.Search, "Pesquisar")
                                 }
                             }
                             is Screen.Community -> {
-                                IconButton(onClick = { /* TODO: Handle create post */ }) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Add,
-                                        contentDescription = "Criar Post"
-                                    )
+                                IconButton(onClick = { /* TODO */ }) {
+                                    Icon(Icons.Default.Add, "Criar Post")
                                 }
-                                IconButton(onClick = { /* TODO: Handle messages */ }) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.ChatBubbleOutline,
-                                        contentDescription = "Mensagens"
-                                    )
+                                IconButton(onClick = { /* TODO */ }) {
+                                    Icon(Icons.AutoMirrored.Filled.Chat, "Mensagens")
                                 }
                             }
                             is Screen.Profile -> {
-                                IconButton(onClick = { /* TODO: Handle settings */ }) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Settings,
-                                        contentDescription = "Configurações"
-                                    )
+                                IconButton(onClick = { /* TODO */ }) {
+                                    Icon(Icons.Outlined.Settings, "Configurações")
                                 }
                             }
                             else -> {}
                         }
                     },
                     colors = topBarColors,
-                    // Adiciona padding para não desenhar atrás da Status Bar
                     modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars)
                 )
             }
@@ -119,10 +107,8 @@ fun MainScreen() {
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar(
-                    containerColor = Color(0xFF121412),
-                    modifier = Modifier
-                        .height(80.dp)
-                        .windowInsetsPadding(WindowInsets.navigationBars) // <<< MUDANÇA PRINCIPAL
+                    containerColor = Color(0xFFf9efd4), // Nova cor de fundo
+                    modifier = Modifier.height(80.dp).windowInsetsPadding(WindowInsets.navigationBars)
                 ) {
                     screens.forEach { screen ->
                         NavigationBarItem(
@@ -131,19 +117,18 @@ fun MainScreen() {
                             selected = currentScreen == screen,
                             onClick = { currentScreen = screen },
                             colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = Color(0xFF38761d),
-                                unselectedIconColor = Color.Gray,
-                                selectedTextColor = Color(0xFF38761d),
-                                unselectedTextColor = Color.Gray,
-                                indicatorColor = Color(0xFF2E2E2E) // Indicador um pouco mais escuro
+                                selectedIconColor = Color(0xFF5d8c4a),      // Verde para ícone selecionado
+                                unselectedIconColor = Color(0xFF757575),  // Cinza escuro para ícones não selecionados
+                                selectedTextColor = Color(0xFF5d8c4a),      // Verde para texto selecionado
+                                unselectedTextColor = Color(0xFF757575),  // Cinza escuro para texto não selecionado
+                                indicatorColor = Color(0xFFE0E0E0)     // Cor de fundo do indicador
                             )
                         )
                     }
                 }
             }
         },
-        containerColor = Color(0xFF121412),
-        contentWindowInsets = WindowInsets(0,0,0,0), // <<< MUDANÇA PRINCIPAL
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {

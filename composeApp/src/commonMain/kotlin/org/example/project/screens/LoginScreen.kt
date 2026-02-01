@@ -73,12 +73,17 @@ import org.example.project.theme.AppSizing
 import org.example.project.theme.AppSpacing
 import org.example.project.theme.grainyGradientBrush
 import org.example.project.theme.premiumShadow
+import org.example.project.ui.theme.SystemAppearance
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun LoginScreen(onLoginSuccess: () -> Unit, onRegisterClicked: () -> Unit) {
+    // Esta é a abordagem correta: cada tela é responsável pela sua própria
+    // aparência de sistema. Como esta tela tem um fundo claro, isLight = true.
+    SystemAppearance(isLight = true)
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }

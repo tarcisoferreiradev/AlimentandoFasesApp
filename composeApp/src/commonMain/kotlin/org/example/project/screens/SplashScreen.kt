@@ -32,12 +32,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import org.example.project.ui.theme.SystemAppearance
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 
 private object SplashScreenDefaults {
     // Colors
-    val BackgroundColor = Color(0xFFFBF9F3)
+    val BackgroundColor = Color(0xFFFBF9F3) // Cor original restaurada
     val TextColor = Color(0xFF38761d)
 
     // Durations
@@ -64,6 +65,8 @@ private object SplashScreenDefaults {
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun SplashScreen(onFinish: () -> Unit) {
+    // A SplashScreen tem um fundo claro (FBF9F3), então isLight deve ser true.
+    SystemAppearance(isLight = true)
 
     val logoAlpha = remember { Animatable(0f) }
     val logoOffsetY = remember { Animatable(SplashScreenDefaults.InitialOffsetY) }
