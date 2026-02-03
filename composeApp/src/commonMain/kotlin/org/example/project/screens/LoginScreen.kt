@@ -80,8 +80,6 @@ import org.jetbrains.compose.resources.painterResource
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun LoginScreen(onLoginSuccess: () -> Unit, onRegisterClicked: () -> Unit) {
-    // Esta é a abordagem correta: cada tela é responsável pela sua própria
-    // aparência de sistema. Como esta tela tem um fundo claro, isLight = true.
     SystemAppearance(isLight = true)
 
     var email by remember { mutableStateOf("") }
@@ -114,7 +112,27 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onRegisterClicked: () -> Unit) {
     }
 
     fun handleLogin() {
-        onLoginSuccess()
+        // Early Return: Impede múltiplas submissões enquanto o login está em progresso.
+        if (isLoading) return
+
+        // Diretriz Arquitetural: A validação de campos foi temporariamente removida
+        // para facilitar o desenvolvimento e teste do fluxo de navegação. Em um ambiente
+        // de produção, a chamada a `validateFields()` é mandatória.
+        /*
+        if (!validateFields()) {
+            return
+        }
+        */
+
+        scope.launch {
+            isLoading = true
+            serverError = null // Limpa erros de servidor anteriores
+
+            // Simula a latência da rede para uma chamada de API de login.
+            delay(1500L)
+
+            onLoginSuccess()
+        }
     }
 
     Box(
@@ -252,7 +270,12 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onRegisterClicked: () -> Unit) {
                     .height(AppSizing.buttonHeight)
                     .premiumShadow()
                     .scale(scale),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5d8c4a), contentColor = Color.White),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF5d8c4a),
+                    contentColor = Color.White,
+                    disabledContainerColor = Color(0xFF5d8c4a).copy(alpha = 0.6f),
+                    disabledContentColor = Color.White
+                ),
                 shape = RoundedCornerShape(AppSpacing.medium),
                 interactionSource = interactionSource
             ) {
