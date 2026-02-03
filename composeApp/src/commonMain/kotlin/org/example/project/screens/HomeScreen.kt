@@ -139,7 +139,9 @@ expect fun isLandscape(): Boolean
 
 @Composable
 fun HomeScreen() {
-    SystemAppearance(isLight = false)
+    // Diretriz Arquitetural: Garante que os ícones da barra de status sejam escuros,
+    // correspondendo à TopAppBar clara da MainScreen, independentemente de configurações herdadas.
+    SystemAppearance(isLight = true)
 
     val isLandscape = isLandscape()
 

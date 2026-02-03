@@ -7,11 +7,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Add
@@ -77,7 +75,7 @@ fun MainScreen() {
                                 Icon(
                                     imageVector = Icons.Default.Menu,
                                     contentDescription = "Menu",
-                                    modifier = Modifier.size(28.dp) // Padrão de Acessibilidade: Ícone com área de toque aumentada.
+                                    modifier = Modifier.size(32.dp)
                                 )
                             }
                         }
@@ -106,7 +104,9 @@ fun MainScreen() {
                         }
                     },
                     colors = topBarColors,
-                    modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars)
+                    // Diretriz Arquitetural: Aplicar os insets da barra de status diretamente na TopAppBar
+                    // garante que ela adicione o padding necessário e não seja desenhada sob a barra do sistema.
+                    windowInsets = WindowInsets.statusBars
                 )
             }
         },
@@ -114,7 +114,7 @@ fun MainScreen() {
             if (showBottomBar) {
                 NavigationBar(
                     containerColor = Color(0xFFf9efd4),
-                    modifier = Modifier.height(80.dp).windowInsetsPadding(WindowInsets.navigationBars)
+                    modifier = Modifier.height(80.dp)
                 ) {
                     screens.forEach { screen ->
                         val selectedColor = Color(0xFF5d8c4a)
@@ -128,19 +128,15 @@ fun MainScreen() {
                                 unselectedIconColor = Color(0xFF757575),
                                 selectedTextColor = selectedColor,
                                 unselectedTextColor = Color(0xFF757575),
-                                // Diretriz de UX: A cor do indicador deve ser uma derivação sutil da cor de seleção
-                                // para criar uma aparência coesa e não-disruptiva.
-                                indicatorColor = selectedColor.copy(alpha = 0.1f)
+                                indicatorColor = selectedColor.copy(alpha = 0.2f)
                             )
                         )
                     }
                 }
             }
-        },
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        modifier = Modifier.fillMaxSize()
+        }
     ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             when (currentScreen) {
                 is Screen.Home -> HomeScreen()
                 is Screen.Content -> ContentScreen()
