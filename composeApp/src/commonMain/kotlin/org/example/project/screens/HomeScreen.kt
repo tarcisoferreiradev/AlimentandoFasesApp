@@ -139,7 +139,7 @@ expect fun isLandscape(): Boolean
 
 @Composable
 fun HomeScreen() {
-    SystemAppearance(isLight = true)
+    SystemAppearance(isLight = false)
 
     val isLandscape = isLandscape()
 

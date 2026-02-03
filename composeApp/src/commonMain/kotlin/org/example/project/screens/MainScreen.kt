@@ -9,12 +9,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -43,8 +44,6 @@ import org.jetbrains.compose.resources.painterResource
 @OptIn(ExperimentalResourceApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
-    // Como as barras de navegação agora têm um fundo claro, garantimos que
-    // os ícones da barra de status do sistema sejam escuros para contraste.
     SystemAppearance(isLight = true)
 
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Home) }
@@ -55,10 +54,11 @@ fun MainScreen() {
         topBar = {
             if (showBottomBar) {
                 val topBarColors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFf9efd4),      // Nova cor de fundo
+                    containerColor = Color(0xFFf9efd4),
                     scrolledContainerColor = Color(0xFFf9efd4),
-                    titleContentColor = Color(0xFF333333),      // Conteúdo escuro para contraste
-                    actionIconContentColor = Color(0xFF333333)
+                    titleContentColor = Color(0xFF333333),
+                    actionIconContentColor = Color(0xFF333333),
+                    navigationIconContentColor = Color(0xFF333333)
                 )
                 CenterAlignedTopAppBar(
                     title = {
@@ -71,13 +71,19 @@ fun MainScreen() {
                             else -> currentScreen.label?.let { Text(it, color = Color(0xFF333333)) }
                         }
                     },
+                    navigationIcon = {
+                        if (currentScreen is Screen.Home) {
+                            IconButton(onClick = { /* TODO: Open Navigation Drawer */ }) {
+                                Icon(
+                                    imageVector = Icons.Default.Menu,
+                                    contentDescription = "Menu",
+                                    modifier = Modifier.size(28.dp) // Padrão de Acessibilidade: Ícone com área de toque aumentada.
+                                )
+                            }
+                        }
+                    },
                     actions = {
                         when (currentScreen) {
-                            is Screen.Home -> {
-                                IconButton(onClick = { /* TODO */ }) {
-                                    Icon(Icons.Outlined.Notifications, "Notificações")
-                                }
-                            }
                             is Screen.Content -> {
                                 IconButton(onClick = { /* TODO */ }) {
                                     Icon(Icons.Outlined.Search, "Pesquisar")
@@ -107,21 +113,24 @@ fun MainScreen() {
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar(
-                    containerColor = Color(0xFFf9efd4), // Nova cor de fundo
+                    containerColor = Color(0xFFf9efd4),
                     modifier = Modifier.height(80.dp).windowInsetsPadding(WindowInsets.navigationBars)
                 ) {
                     screens.forEach { screen ->
+                        val selectedColor = Color(0xFF5d8c4a)
                         NavigationBarItem(
                             icon = { Icon(screen.icon!!, contentDescription = screen.label!!) },
                             label = { Text(screen.label!!) },
                             selected = currentScreen == screen,
                             onClick = { currentScreen = screen },
                             colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = Color(0xFF5d8c4a),      // Verde para ícone selecionado
-                                unselectedIconColor = Color(0xFF757575),  // Cinza escuro para ícones não selecionados
-                                selectedTextColor = Color(0xFF5d8c4a),      // Verde para texto selecionado
-                                unselectedTextColor = Color(0xFF757575),  // Cinza escuro para texto não selecionado
-                                indicatorColor = Color(0xFFE0E0E0)     // Cor de fundo do indicador
+                                selectedIconColor = selectedColor,
+                                unselectedIconColor = Color(0xFF757575),
+                                selectedTextColor = selectedColor,
+                                unselectedTextColor = Color(0xFF757575),
+                                // Diretriz de UX: A cor do indicador deve ser uma derivação sutil da cor de seleção
+                                // para criar uma aparência coesa e não-disruptiva.
+                                indicatorColor = selectedColor.copy(alpha = 0.1f)
                             )
                         )
                     }
