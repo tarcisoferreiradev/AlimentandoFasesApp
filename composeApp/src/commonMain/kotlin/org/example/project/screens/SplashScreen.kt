@@ -60,8 +60,22 @@ private object SplashScreenDefaults {
 
     // Easings
     val LogoScaleEasing = CubicBezierEasing(0.22f, 0.61f, 0.36f, 1f)
+
+    // Layout Values
+    val ContainerOffsetY = (-24).dp
 }
 
+/**
+ * Displays a splash screen with a sophisticated entrance and exit animation sequence.
+ * The screen showcases the app logo and name, animating properties like alpha, scale, and offset.
+ *
+ * The animation is divided into several phases:
+ * 1. **Entrance:** Logo and text fade in and scale up.
+ * 2. **Breathing/Parallax:** Subtle animations to give the screen a dynamic feel.
+ * 3. **Exit:** Logo and text fade out asymmetrically before finishing.
+ *
+ * @param onFinish Callback invoked once all exit animations have completed.
+ */
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun SplashScreen(onFinish: () -> Unit) {
@@ -189,7 +203,7 @@ fun SplashScreen(onFinish: () -> Unit) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.offset(y = (-24).dp)
+            modifier = Modifier.offset(y = SplashScreenDefaults.ContainerOffsetY)
         ) {
             Image(
                 painter = painterResource(Res.drawable.logo_app1),

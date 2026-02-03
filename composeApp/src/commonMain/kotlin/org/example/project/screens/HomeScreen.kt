@@ -62,6 +62,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -138,8 +139,6 @@ expect fun isLandscape(): Boolean
 
 @Composable
 fun HomeScreen() {
-    // Diretriz Arquitetural: Cada tela é responsável por declarar a aparência
-    // do sistema. Como esta tela tem um fundo claro, isLight é true.
     SystemAppearance(isLight = true)
 
     val isLandscape = isLandscape()
@@ -154,33 +153,63 @@ fun HomeScreen() {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PortraitHomeScreen() {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().background(HomeScreenDefaults.BackgroundColor),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        item { CarouselSection(items = AppResources.carouselItems) }
-        item { EbooksSection(ebooks = AppResources.ebooks) }
-        item { ActionsSection(actions = AppResources.actions) }
-        item { HydrationCalculatorBlock(modifier = Modifier.padding(vertical = 24.dp)) }
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().background(HomeScreenDefaults.BackgroundColor),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            item { CarouselSection(items = AppResources.carouselItems) }
+            item { EbooksSection(ebooks = AppResources.ebooks) }
+            item { ActionsSection(actions = AppResources.actions) }
+            item { HydrationCalculatorBlock(modifier = Modifier.padding(vertical = 24.dp)) }
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            HomeScreenDefaults.BackgroundColor.copy(alpha = 0.5f),
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun LandscapeHomeScreen() {
-    Row(modifier = Modifier.fillMaxSize().background(HomeScreenDefaults.BackgroundColor)) {
-        Box(modifier = Modifier.fillMaxHeight().weight(1f)) {
-            CarouselSection(items = AppResources.carouselItems)
+    Box(modifier = Modifier.fillMaxSize()) {
+        Row(modifier = Modifier.fillMaxSize().background(HomeScreenDefaults.BackgroundColor)) {
+            Box(modifier = Modifier.fillMaxHeight().weight(1f)) {
+                CarouselSection(items = AppResources.carouselItems)
+            }
+            LazyColumn(
+                modifier = Modifier.fillMaxHeight().weight(1f).padding(horizontal = 24.dp, vertical = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item { EbooksSection(ebooks = AppResources.ebooks) }
+                item { ActionsSection(actions = AppResources.actions) }
+                item { HydrationCalculatorBlock() }
+            }
         }
-        LazyColumn(
-            modifier = Modifier.fillMaxHeight().weight(1f).padding(horizontal = 24.dp, vertical = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item { EbooksSection(ebooks = AppResources.ebooks) }
-            item { ActionsSection(actions = AppResources.actions) }
-            item { HydrationCalculatorBlock() }
-        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            HomeScreenDefaults.BackgroundColor.copy(alpha = 0.5f),
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
     }
 }
 
@@ -227,7 +256,6 @@ private fun CarouselSection(items: List<DrawableResource>) {
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 private fun CarouselCard(imageRes: DrawableResource, modifier: Modifier = Modifier) {
-    // A "película preta" (Box com gradiente) foi removida, conforme solicitado.
     Image(
         painter = painterResource(imageRes),
         contentDescription = null,
@@ -270,8 +298,8 @@ private fun EbookCard(ebook: Ebook, onDownloadClick: () -> Unit, modifier: Modif
             Image(
                 painter = painterResource(ebook.imageRes),
                 contentDescription = ebook.contentDescription,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxWidth().aspectRatio(3f / 4f)
+                contentScale = ContentScale.FillWidth,
+                modifier = Modifier.fillMaxWidth()
             )
         }
         Button(
