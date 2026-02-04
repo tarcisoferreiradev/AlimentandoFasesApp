@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Add
@@ -104,8 +106,6 @@ fun MainScreen() {
                         }
                     },
                     colors = topBarColors,
-                    // Diretriz Arquitetural: Aplicar os insets da barra de status diretamente na TopAppBar
-                    // garante que ela adicione o padding necessário e não seja desenhada sob a barra do sistema.
                     windowInsets = WindowInsets.statusBars
                 )
             }
@@ -114,10 +114,12 @@ fun MainScreen() {
             if (showBottomBar) {
                 NavigationBar(
                     containerColor = Color(0xFFf9efd4),
-                    modifier = Modifier.height(80.dp)
+                    modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)
                 ) {
                     screens.forEach { screen ->
                         val selectedColor = Color(0xFF5d8c4a)
+                        val unselectedColor = Color(0xFF333333) // Cor "preto forte" para consistência.
+
                         NavigationBarItem(
                             icon = { Icon(screen.icon!!, contentDescription = screen.label!!) },
                             label = { Text(screen.label!!) },
@@ -125,10 +127,10 @@ fun MainScreen() {
                             onClick = { currentScreen = screen },
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = selectedColor,
-                                unselectedIconColor = Color(0xFF757575),
                                 selectedTextColor = selectedColor,
-                                unselectedTextColor = Color(0xFF757575),
-                                indicatorColor = selectedColor.copy(alpha = 0.2f)
+                                unselectedIconColor = unselectedColor,
+                                unselectedTextColor = unselectedColor,
+                                indicatorColor = selectedColor.copy(alpha = 0.1f)
                             )
                         )
                     }

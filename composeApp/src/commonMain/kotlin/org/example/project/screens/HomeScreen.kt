@@ -62,7 +62,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -139,8 +138,6 @@ expect fun isLandscape(): Boolean
 
 @Composable
 fun HomeScreen() {
-    // Diretriz Arquitetural: Garante que os ícones da barra de status sejam escuros,
-    // correspondendo à TopAppBar clara da MainScreen, independentemente de configurações herdadas.
     SystemAppearance(isLight = true)
 
     val isLandscape = isLandscape()
@@ -155,63 +152,33 @@ fun HomeScreen() {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PortraitHomeScreen() {
-    Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().background(HomeScreenDefaults.BackgroundColor),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            item { CarouselSection(items = AppResources.carouselItems) }
-            item { EbooksSection(ebooks = AppResources.ebooks) }
-            item { ActionsSection(actions = AppResources.actions) }
-            item { HydrationCalculatorBlock(modifier = Modifier.padding(vertical = 24.dp)) }
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            HomeScreenDefaults.BackgroundColor.copy(alpha = 0.5f),
-                            Color.Transparent
-                        )
-                    )
-                )
-        )
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().background(HomeScreenDefaults.BackgroundColor),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        item { CarouselSection(items = AppResources.carouselItems) }
+        item { EbooksSection(ebooks = AppResources.ebooks) }
+        item { ActionsSection(actions = AppResources.actions) }
+        item { HydrationCalculatorBlock(modifier = Modifier.padding(vertical = 24.dp)) }
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun LandscapeHomeScreen() {
-    Box(modifier = Modifier.fillMaxSize()) {
-        Row(modifier = Modifier.fillMaxSize().background(HomeScreenDefaults.BackgroundColor)) {
-            Box(modifier = Modifier.fillMaxHeight().weight(1f)) {
-                CarouselSection(items = AppResources.carouselItems)
-            }
-            LazyColumn(
-                modifier = Modifier.fillMaxHeight().weight(1f).padding(horizontal = 24.dp, vertical = 32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                item { EbooksSection(ebooks = AppResources.ebooks) }
-                item { ActionsSection(actions = AppResources.actions) }
-                item { HydrationCalculatorBlock() }
-            }
+    Row(modifier = Modifier.fillMaxSize().background(HomeScreenDefaults.BackgroundColor)) {
+        Box(modifier = Modifier.fillMaxHeight().weight(1f)) {
+            CarouselSection(items = AppResources.carouselItems)
         }
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            HomeScreenDefaults.BackgroundColor.copy(alpha = 0.5f),
-                            Color.Transparent
-                        )
-                    )
-                )
-        )
+        LazyColumn(
+            modifier = Modifier.fillMaxHeight().weight(1f).padding(horizontal = 24.dp, vertical = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item { EbooksSection(ebooks = AppResources.ebooks) }
+            item { ActionsSection(actions = AppResources.actions) }
+            item { HydrationCalculatorBlock() }
+        }
     }
 }
 
