@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -37,161 +36,95 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 
 private object SplashScreenDefaults {
-    // Colors
-    val BackgroundColor = Color(0xFFFBF9F3) // Cor original restaurada
+    val BackgroundColor = Color(0xFFFBF9F3)
     val TextColor = Color(0xFF38761d)
 
-    // Durations
-    const val EntranceDuration = 800
-    const val ScaleEntranceDuration = 1000
+    // Timings ajustados para uma experiência contínua pós-splash nativa
+    const val TotalScreenTime = 1800L // Tempo total reduzido
+    const val TextEntranceDelay = 100L  // Texto aparece mais cedo
     const val ExitDuration = 400
-    const val TextEntranceDelay = 400L
-    const val TotalScreenTime = 2800L
     const val ExitStaggerDelay = 100L
 
-    // Animation Values
-    const val InitialOffsetY = 15f
-    const val InitialScale = 0.95f
+    // Valores de animação para saída
     const val ExitLogoOffsetY = -30f
     const val ExitTextOffsetY = 30f
-    const val OffsetStaggerDelay = 50L
-    const val ScaleStaggerDelay = 80L
+
     const val FinalLetterSpacing = 0.02f
-
-    // Easings
-    val LogoScaleEasing = CubicBezierEasing(0.22f, 0.61f, 0.36f, 1f)
-
-    // Layout Values
-    val ContainerOffsetY = (-24).dp
 }
 
 /**
- * Displays a splash screen with a sophisticated entrance and exit animation sequence.
- * The screen showcases the app logo and name, animating properties like alpha, scale, and offset.
+ * [ARQUITETURA] SplashScreen Refatorada para Transição Contínua
  *
- * The animation is divided into several phases:
- * 1. **Entrance:** Logo and text fade in and scale up.
- * 2. **Breathing/Parallax:** Subtle animations to give the screen a dynamic feel.
- * 3. **Exit:** Logo and text fade out asymmetrically before finishing.
- *
- * @param onFinish Callback invoked once all exit animations have completed.
+ * A animação de "entrada" foi removida. O Composable agora inicializa com o logo
+ * já visível, em um estado idêntico ao da splash screen nativa. A animação começa
+ * com os efeitos sutis, dando a impressão de que a logo estática "ganhou vida".
  */
 @OptIn(ExperimentalResourceApi::class)
 @Composable
-fun SplashScreen(onFinish: () -> Unit) {
-    // A SplashScreen tem um fundo claro (FBF9F3), então isLight deve ser true.
+fun SplashScreen(
+    uiReady: Boolean,
+    onFinish: () -> Unit
+) {
     SystemAppearance(isLight = true)
 
-    val logoAlpha = remember { Animatable(0f) }
-    val logoOffsetY = remember { Animatable(SplashScreenDefaults.InitialOffsetY) }
-    val logoScale = remember { Animatable(SplashScreenDefaults.InitialScale) }
-    val parallaxLogoOffsetY = remember { Animatable(0f) }
-    val parallaxTextOffsetY = remember { Animatable(0f) }
+    // Estado inicial "quente": O logo começa visível e centralizado.
+    val logoAlpha = remember { Animatable(1f) }
+    val logoOffsetY = remember { Animatable(0f) }
+    val logoScale = remember { Animatable(1f) }
 
     val fullText = "ALIMENTANDO FASES"
     val textAlpha = remember { Animatable(0f) }
     val textScale = remember { Animatable(0.98f) }
     val textOffsetY = remember { Animatable(0f) }
 
-
-    LaunchedEffect(key1 = Unit) {
-        // --- ENTRANCE ANIMATIONS ---
-        launch {
-            // Opacity First, Motion Later
+    LaunchedEffect(uiReady) {
+        if (uiReady) {
+            // FASE 1: Animação de texto e "respiração" do logo
             launch {
-                logoAlpha.animateTo(1f, tween(180))
-                delay(40)
-                logoOffsetY.animateTo(0f, tween(260, easing = FastOutSlowInEasing))
+                delay(SplashScreenDefaults.TextEntranceDelay)
+                launch {
+                    textAlpha.animateTo(1f, tween(320, easing = CubicBezierEasing(0.2f, 0.8f, 0.2f, 1f)))
+                }
+                launch {
+                    textScale.animateTo(1f, tween(420, easing = FastOutSlowInEasing))
+                }
             }
             launch {
-                delay(SplashScreenDefaults.ScaleStaggerDelay)
-                logoScale.animateTo(
-                    targetValue = 1f,
-                    animationSpec = tween(
-                        durationMillis = SplashScreenDefaults.ScaleEntranceDuration,
-                        easing = SplashScreenDefaults.LogoScaleEasing
-                    )
-                )
-                // Breathing animation
-                logoScale.animateTo(
-                    targetValue = 1.015f,
-                    animationSpec = tween(durationMillis = 650, easing = FastOutSlowInEasing)
-                )
-                logoScale.animateTo(
-                    targetValue = 1f,
-                    animationSpec = tween(durationMillis = 650, easing = FastOutSlowInEasing)
-                )
+                // Animação sutil de "respiração" para dar vida ao logo
+                logoScale.animateTo(1.02f, tween(800, easing = FastOutSlowInEasing))
+                logoScale.animateTo(1f, tween(800, easing = FastOutSlowInEasing))
             }
-        }
 
-        // Fade + Blur Mental Text Animation
-        launch {
-            delay(SplashScreenDefaults.TextEntranceDelay)
-            launch {
-                textAlpha.animateTo(
-                    1f,
-                    tween(320, easing = CubicBezierEasing(0.2f, 0.8f, 0.2f, 1f))
-                )
+            // --- PAUSA & PREPARA PARA SAIR ---
+            val exitAnimationTotalDuration = SplashScreenDefaults.ExitDuration + SplashScreenDefaults.ExitStaggerDelay
+            val timeBeforeExit = SplashScreenDefaults.TotalScreenTime - exitAnimationTotalDuration
+            delay(timeBeforeExit)
+
+            delay(120)
+
+            // --- FASE 2: Animações de Saída Assimétricas ---
+            val exitJobs = mutableListOf<Job>()
+
+            exitJobs += launch {
+                textAlpha.animateTo(0f, tween(200, easing = FastOutSlowInEasing))
             }
-            launch {
-                textScale.animateTo(
-                    1f,
-                    tween(420, easing = FastOutSlowInEasing)
-                )
+            exitJobs += launch {
+                textOffsetY.animateTo(SplashScreenDefaults.ExitTextOffsetY, tween(200, easing = FastOutSlowInEasing))
             }
-        }
 
-        // Gentle Parallax Drift
-        launch {
-            delay(SplashScreenDefaults.TextEntranceDelay + 500)
-            launch {
-                parallaxLogoOffsetY.animateTo(
-                    targetValue = 2f,
-                    animationSpec = tween(durationMillis = 1800, easing = FastOutSlowInEasing)
-                )
+            exitJobs += launch {
+                delay(SplashScreenDefaults.ExitStaggerDelay)
+                logoAlpha.animateTo(0f, tween(SplashScreenDefaults.ExitDuration, easing = FastOutSlowInEasing))
             }
-            launch {
-                parallaxTextOffsetY.animateTo(
-                    targetValue = -2f,
-                    animationSpec = tween(durationMillis = 1800, easing = FastOutSlowInEasing)
-                )
+            exitJobs += launch {
+                delay(SplashScreenDefaults.ExitStaggerDelay)
+                logoOffsetY.animateTo(SplashScreenDefaults.ExitLogoOffsetY, tween(SplashScreenDefaults.ExitDuration, easing = FastOutSlowInEasing))
             }
+
+            joinAll(*exitJobs.toTypedArray())
+
+            onFinish()
         }
-
-        // --- PAUSE & PREPARE FOR EXIT ---
-        val exitAnimationTotalDuration = SplashScreenDefaults.ExitDuration + SplashScreenDefaults.ExitStaggerDelay
-        val timeBeforeExit = SplashScreenDefaults.TotalScreenTime - exitAnimationTotalDuration
-        delay(timeBeforeExit)
-
-        // Micro pause
-        delay(120)
-
-        // --- ASYMMETRIC EXIT ANIMATIONS ---
-        val exitJobs = mutableListOf<Job>()
-
-        // Text fades out first with a drift
-        exitJobs += launch {
-            textAlpha.animateTo(0f, tween(200, easing = FastOutSlowInEasing))
-        }
-        exitJobs += launch {
-            textOffsetY.animateTo(SplashScreenDefaults.ExitTextOffsetY, tween(200, easing = FastOutSlowInEasing))
-        }
-
-
-        // Logo exits with a slight delay
-        exitJobs += launch {
-            delay(SplashScreenDefaults.ExitStaggerDelay)
-            logoAlpha.animateTo(0f, tween(SplashScreenDefaults.ExitDuration, easing = FastOutSlowInEasing))
-        }
-        exitJobs += launch {
-            delay(SplashScreenDefaults.ExitStaggerDelay)
-            logoOffsetY.animateTo(SplashScreenDefaults.ExitLogoOffsetY, tween(SplashScreenDefaults.ExitDuration, easing = FastOutSlowInEasing))
-        }
-
-        joinAll(*exitJobs.toTypedArray())
-
-        // --- FINISH ---
-        onFinish()
     }
 
     Box(
@@ -202,8 +135,7 @@ fun SplashScreen(onFinish: () -> Unit) {
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.offset(y = SplashScreenDefaults.ContainerOffsetY)
+            verticalArrangement = Arrangement.Center
         ) {
             Image(
                 painter = painterResource(Res.drawable.logo_app1),
@@ -212,7 +144,7 @@ fun SplashScreen(onFinish: () -> Unit) {
                     .size(220.dp)
                     .graphicsLayer {
                         alpha = logoAlpha.value
-                        translationY = logoOffsetY.value + parallaxLogoOffsetY.value
+                        translationY = logoOffsetY.value
                         scaleX = logoScale.value
                         scaleY = logoScale.value
                     }
@@ -231,7 +163,7 @@ fun SplashScreen(onFinish: () -> Unit) {
                     alpha = textAlpha.value
                     scaleX = textScale.value
                     scaleY = textScale.value
-                    translationY = textOffsetY.value + parallaxTextOffsetY.value
+                    translationY = textOffsetY.value
                 }
             )
         }

@@ -64,6 +64,7 @@ kotlin {
             dependencies {
                 implementation(compose.preview)
                 implementation(libs.androidx.activity.compose)
+                implementation(libs.androidx.splashscreen) // Adicionado para a splash screen
             }
         }
         val jvmMain by getting {
@@ -83,6 +84,9 @@ kotlin {
 android {
     namespace = appPackageName // <-- Usar a variável
     compileSdk = libs.versions.android.compileSdk.get().toInt()
+
+    // [CORREÇÃO CANÔNICA] Adiciona o diretório de recursos comuns usando o método `srcDir`.
+    sourceSets["main"].res.srcDir("src/commonMain/composeResources")
 
     defaultConfig {
         applicationId = appPackageName // <-- Usar a variável

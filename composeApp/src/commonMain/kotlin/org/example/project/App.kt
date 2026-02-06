@@ -29,10 +29,9 @@ import org.example.project.screens.VerifyEmailScreen
 import org.example.project.theme.AlimentandoFasesTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-
 @Composable
 @Preview
-fun App() {
+fun App(uiReady: Boolean = false) {
     AlimentandoFasesTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
             var currentScreen by remember { mutableStateOf<Screen>(Screen.Splash) }
@@ -40,34 +39,15 @@ fun App() {
             AnimatedContent(
                 targetState = currentScreen,
                 transitionSpec = {
-                    fadeIn(
-                        animationSpec = tween(
-                            durationMillis = 200,
-                            easing = FastOutSlowInEasing
-                        )
-                    ) + scaleIn(
-                        initialScale = 0.98f,
-                        animationSpec = tween(
-                            durationMillis = 200,
-                            easing = FastOutSlowInEasing
-                        )
-                    ) togetherWith
-                            fadeOut(
-                                animationSpec = tween(
-                                    durationMillis = 200,
-                                    easing = FastOutSlowInEasing
-                                )
-                            ) + scaleOut(
-                        targetScale = 0.98f,
-                        animationSpec = tween(
-                            durationMillis = 200,
-                            easing = FastOutSlowInEasing
-                        )
-                    )
+                    fadeIn(animationSpec = tween(200, easing = FastOutSlowInEasing)) +
+                            scaleIn(initialScale = 0.98f, animationSpec = tween(200, easing = FastOutSlowInEasing)) togetherWith
+                            fadeOut(animationSpec = tween(200, easing = FastOutSlowInEasing)) +
+                            scaleOut(targetScale = 0.98f, animationSpec = tween(200, easing = FastOutSlowInEasing))
                 }
             ) { screen ->
                 when (screen) {
                     is Screen.Splash -> SplashScreen(
+                        uiReady = uiReady,
                         onFinish = { currentScreen = Screen.Login }
                     )
                     is Screen.Login -> LoginScreen(
@@ -84,8 +64,8 @@ fun App() {
                         onBackClicked = { currentScreen = Screen.CreateAccount }
                     )
                     is Screen.CreatePassword -> CreatePasswordScreen(
-                        onContinueClicked = { /* TODO: Save user and navigate */ currentScreen = Screen.Main },
-                        onBackClicked = { currentScreen = Screen.VerifyEmail("") /*TODO: Pass email back*/ }
+                        onContinueClicked = { currentScreen = Screen.Main },
+                        onBackClicked = { currentScreen = Screen.VerifyEmail("") }
                     )
                     is Screen.RegistrationName -> RegistrationNameScreen(
                         onContinueClicked = { currentScreen = Screen.RegistrationBirthday }
@@ -100,7 +80,6 @@ fun App() {
                         onBackClicked = { currentScreen = Screen.RegistrationBirthday }
                     )
                     is Screen.Main -> MainScreen()
-                    // Adicionando os casos que faltam para tornar o when exaustivo
                     is Screen.Home, is Screen.Content, is Screen.Community, is Screen.Profile -> MainScreen()
                 }
             }

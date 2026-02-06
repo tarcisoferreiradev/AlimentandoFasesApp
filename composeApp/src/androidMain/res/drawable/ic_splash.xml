@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+[ARQUITETURA] Define um Drawable para a splash screen nativa com tamanho explícito.
+
+DECISÃO: Em vez de depender do sistema para redimensionar o ícone, o que pode levar
+a comportamentos inconsistentes (logo gigante), nós definimos um tamanho fixo de 220dp.
+Isso garante que o ícone da splash screen nativa tenha exatamente o mesmo tamanho
+do ícone na SplashScreen em Compose, criando uma transição visualmente contínua e resiliente
+a diferentes densidades de tela.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:width="220dp"
+        android:height="220dp"
+        android:drawable="@drawable/logo_app1"
+        android:gravity="center" />
+</layer-list>

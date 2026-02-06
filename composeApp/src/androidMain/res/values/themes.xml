@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+    [ARQUITETURA] Tema da Splash Screen.
+    Ele define a aparência da janela de inicialização e aponta para o tema principal
+    que será usado após a transição.
+    -->
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
+        <item name="postSplashScreenTheme">@style/Theme.App.Main</item>
+    </style>
+
+    <!--
+    [ARQUITETURA] Tema Principal do App.
+    DECISÃO: A propriedade `android:windowBackground` é definida com a mesma cor da splash.
+    Isso garante que, no milissegundo de transição entre a splash nativa e a UI do Compose,
+    o fundo da janela da Activity já esteja na cor correta, eliminando o "flicker" branco
+    e garantindo uma transição imperceptível.
+    -->
+    <style name="Theme.App.Main" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
+</resources>
