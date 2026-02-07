@@ -60,14 +60,7 @@ fun MainScreen() {
                 )
                 CenterAlignedTopAppBar(
                     title = {
-                        when (currentScreen) {
-                            is Screen.Home -> Image(
-                                painter = painterResource(Res.drawable.logo_app1),
-                                contentDescription = "Logo Alimentando Fases",
-                                modifier = Modifier.height(32.dp)
-                            )
-                            else -> currentScreen.label?.let { Text(it) }
-                        }
+                        currentScreen.label?.let { Text(it) }
                     },
                     navigationIcon = {
                         if (currentScreen is Screen.Home) {

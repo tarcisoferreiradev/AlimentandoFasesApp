@@ -41,6 +41,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Remove
@@ -64,7 +66,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -205,6 +209,7 @@ private fun CarouselSection(items: List<DrawableResource>) {
     val initialPage = startingPoint - (startingPoint % items.size)
     val pagerState = rememberPagerState(initialPage = initialPage) { pageCount }
     val scope = rememberCoroutineScope()
+    val navigationButtonBackgroundColor = Color.Black.copy(alpha = 0.2f)
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -225,6 +230,40 @@ private fun CarouselSection(items: List<DrawableResource>) {
         HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
             CarouselCard(imageRes = items[page % items.size])
         }
+
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = {
+                    scope.launch {
+                        pagerState.animateScrollToPage(
+                            page = pagerState.currentPage - 1,
+                            animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing)
+                        )
+                    }
+                },
+                modifier = Modifier.size(40.dp).clip(CircleShape).background(navigationButtonBackgroundColor)
+            ) {
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Página anterior", tint = Color.White, modifier = Modifier.size(24.dp))
+            }
+            IconButton(
+                onClick = {
+                    scope.launch {
+                        pagerState.animateScrollToPage(
+                            page = pagerState.currentPage + 1,
+                            animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing)
+                        )
+                    }
+                },
+                modifier = Modifier.size(40.dp).clip(CircleShape).background(navigationButtonBackgroundColor)
+            ) {
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Próxima página", tint = Color.White, modifier = Modifier.size(24.dp))
+            }
+        }
+
         Row(
             Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
