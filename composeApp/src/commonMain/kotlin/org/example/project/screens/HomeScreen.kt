@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -51,6 +52,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -71,7 +73,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.example.project.ui.theme.SystemAppearance
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
@@ -127,57 +128,71 @@ private class CalculateDailyWaterIntakeUseCase {
 
 // =====================================================================================
 // CAMADA DE UI (COMPOSABLES)
+// DIRETRIZ ARQUITETURAL: O uso de Scaffold é introduzido para gerenciar
+// corretamente a estrutura da tela e os WindowInsets, permitindo o efeito
+// Edge-to-Edge sem que as barras do sistema obstruam o conteúdo interativo.
 // =====================================================================================
-
-private object HomeScreenDefaults {
-    val BackgroundColor = Color(0xFFe7dfc9)
-}
 
 @Composable
 expect fun isLandscape(): Boolean
 
 @Composable
 fun HomeScreen() {
-    SystemAppearance(isLight = true)
-
-    val isLandscape = isLandscape()
-
-    if (isLandscape) {
+    if (isLandscape()) {
         LandscapeHomeScreen()
-    } else {
-        PortraitHomeScreen()
+        return
     }
+
+    PortraitHomeScreen()
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PortraitHomeScreen() {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().background(HomeScreenDefaults.BackgroundColor),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        item { CarouselSection(items = AppResources.carouselItems) }
-        item { EbooksSection(ebooks = AppResources.ebooks) }
-        item { ActionsSection(actions = AppResources.actions) }
-        item { HydrationCalculatorBlock(modifier = Modifier.padding(vertical = 24.dp)) }
+    Scaffold(
+        containerColor = Color(0xFFe6dfca),
+        contentWindowInsets = WindowInsets(0.dp)
+    ) { contentPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(contentPadding),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(bottom = 96.dp)
+        ) {
+            item { CarouselSection(items = AppResources.carouselItems) }
+            item { EbooksSection(ebooks = AppResources.ebooks) }
+            item { ActionsSection(actions = AppResources.actions) }
+            item { HydrationCalculatorBlock(modifier = Modifier.padding(vertical = 24.dp)) }
+        }
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun LandscapeHomeScreen() {
-    Row(modifier = Modifier.fillMaxSize().background(HomeScreenDefaults.BackgroundColor)) {
-        Box(modifier = Modifier.fillMaxHeight().weight(1f)) {
-            CarouselSection(items = AppResources.carouselItems)
-        }
-        LazyColumn(
-            modifier = Modifier.fillMaxHeight().weight(1f).padding(horizontal = 24.dp, vertical = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+    Scaffold(
+        containerColor = Color(0xFFe6dfca),
+        contentWindowInsets = WindowInsets(0.dp)
+    ) { contentPadding ->
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(contentPadding)
         ) {
-            item { EbooksSection(ebooks = AppResources.ebooks) }
-            item { ActionsSection(actions = AppResources.actions) }
-            item { HydrationCalculatorBlock() }
+            Box(modifier = Modifier.fillMaxHeight().weight(1f)) {
+                CarouselSection(items = AppResources.carouselItems)
+            }
+            LazyColumn(
+                modifier = Modifier.fillMaxHeight().weight(1f).padding(horizontal = 24.dp),
+                contentPadding = PaddingValues(vertical = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item { EbooksSection(ebooks = AppResources.ebooks) }
+                item { ActionsSection(actions = AppResources.actions) }
+                item { HydrationCalculatorBlock() }
+            }
         }
     }
 }
