@@ -48,6 +48,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
@@ -105,44 +106,28 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onRegisterClicked: () -> Unit) {
         grainIntensity = 0.02f
     )
 
-    fun validateFields(): Boolean {
-        emailError = if (email.isBlank()) "O e-mail não pode estar em branco" else null
-        passwordError = if (password.isBlank()) "A senha não pode estar em branco" else null
-        return emailError == null && passwordError == null
-    }
-
     fun handleLogin() {
-        // Early Return: Impede múltiplas submissões enquanto o login está em progresso.
         if (isLoading) return
-
-        // Diretriz Arquitetural: A validação de campos foi temporariamente removida
-        // para facilitar o desenvolvimento e teste do fluxo de navegação. Em um ambiente
-        // de produção, a chamada a `validateFields()` é mandatória.
-        /*
-        if (!validateFields()) {
-            return
-        }
-        */
 
         scope.launch {
             isLoading = true
-            serverError = null // Limpa erros de servidor anteriores
-
-            // Simula a latência da rede para uma chamada de API de login.
+            serverError = null
             delay(1500L)
-
             onLoginSuccess()
         }
     }
 
     Box(
-        modifier = Modifier.fillMaxSize().background(backgroundBrush)
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundBrush)
+            .verticalScroll(rememberScrollState()),
+        // Diretriz Arquitetural: O BiasAlignment desloca o conteúdo verticalmente
+        // para uma melhor ergonomia, enquanto o Box gerencia a rolagem para responsividade.
+        contentAlignment = BiasAlignment(0f, 0.25f)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 40.dp, vertical = AppSpacing.extraLarge),
+            modifier = Modifier.padding(horizontal = 40.dp, vertical = AppSpacing.extraLarge),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Image(
@@ -165,90 +150,94 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onRegisterClicked: () -> Unit) {
 
             Spacer(Modifier.height(AppSpacing.extraLarge))
 
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it; emailError = null; serverError = null },
-                label = { Text("E-mail") },
-                leadingIcon = { Icon(Icons.Filled.Email, contentDescription = null) },
-                modifier = Modifier.fillMaxWidth().premiumShadow(),
-                shape = RoundedCornerShape(AppSpacing.medium),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Black,
-                    unfocusedBorderColor = Color.Black,
-                    unfocusedContainerColor = Color.White,
-                    focusedContainerColor = Color.White,
-                    focusedLabelColor = Color.Black,
-                    unfocusedLabelColor = Color.Black,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black,
-                    errorSupportingTextColor = MaterialTheme.colorScheme.error
-                ),
-                isError = emailError != null || serverError != null,
-                supportingText = { if (emailError != null) Text(emailError!!) },
-                singleLine = true
-            )
+            // --- Bloco de Campos de Login ---
+            Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.small)) {
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it; emailError = null; serverError = null },
+                    label = { Text("E-mail") },
+                    leadingIcon = { Icon(Icons.Filled.Email, contentDescription = null) },
+                    modifier = Modifier.fillMaxWidth().premiumShadow(),
+                    shape = RoundedCornerShape(AppSpacing.medium),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Black,
+                        unfocusedBorderColor = Color.Black,
+                        unfocusedContainerColor = Color.White,
+                        focusedContainerColor = Color.White,
+                        focusedLabelColor = Color.Black,
+                        unfocusedLabelColor = Color.Black,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        errorSupportingTextColor = MaterialTheme.colorScheme.error
+                    ),
+                    isError = emailError != null || serverError != null,
+                    supportingText = { if (emailError != null) Text(emailError!!) },
+                    singleLine = true
+                )
 
-            Spacer(Modifier.height(AppSpacing.small))
-
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it; passwordError = null; serverError = null },
-                label = { Text("Senha") },
-                leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null) },
-                trailingIcon = {
-                    val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(imageVector = image, contentDescription = if (passwordVisible) "Hide password" else "Show password")
-                    }
-                },
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                modifier = Modifier.fillMaxWidth().premiumShadow(),
-                shape = RoundedCornerShape(AppSpacing.medium),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Black,
-                    unfocusedBorderColor = Color.Black,
-                    unfocusedContainerColor = Color.White,
-                    focusedContainerColor = Color.White,
-                    focusedLabelColor = Color.Black,
-                    unfocusedLabelColor = Color.Black,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black,
-                    errorSupportingTextColor = MaterialTheme.colorScheme.error
-                ),
-                isError = passwordError != null || serverError != null,
-                supportingText = { if (passwordError != null) Text(passwordError!!) },
-                singleLine = true
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .offset(y = (-8).dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.offset(x = (-12).dp)
-                ) {
-                    Checkbox(
-                        checked = rememberMe,
-                        onCheckedChange = { rememberMe = it },
-                        colors = CheckboxDefaults.colors(
-                            checkedColor = Color(0xFF5d8c4a),
-                            uncheckedColor = Color.Black,
-                            checkmarkColor = Color.White
-                        )
-                    )
-                    Text("Lembrar de mim", style = MaterialTheme.typography.bodySmall, color = Color.Black)
-                }
-                ClickableText(
-                    text = buildAnnotatedString { append("Esqueceu a senha?") },
-                    onClick = { /* TODO */ },
-                    style = MaterialTheme.typography.bodySmall.copy(color = Color.Black)
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it; passwordError = null; serverError = null },
+                    label = { Text("Senha") },
+                    leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null) },
+                    trailingIcon = {
+                        val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(imageVector = image, contentDescription = if (passwordVisible) "Hide password" else "Show password")
+                        }
+                    },
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    modifier = Modifier.fillMaxWidth().premiumShadow(),
+                    shape = RoundedCornerShape(AppSpacing.medium),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Black,
+                        unfocusedBorderColor = Color.Black,
+                        unfocusedContainerColor = Color.White,
+                        focusedContainerColor = Color.White,
+                        focusedLabelColor = Color.Black,
+                        unfocusedLabelColor = Color.Black,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        errorSupportingTextColor = MaterialTheme.colorScheme.error
+                    ),
+                    isError = passwordError != null || serverError != null,
+                    supportingText = { if (passwordError != null) Text(passwordError!!) },
+                    singleLine = true
                 )
             }
+            // --- Fim do Bloco de Campos de Login ---
+
+            // --- Bloco de Ações de Senha ---
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.offset(x = (-12).dp)
+                    ) {
+                        Checkbox(
+                            checked = rememberMe,
+                            onCheckedChange = { rememberMe = it },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = Color(0xFF5d8c4a),
+                                uncheckedColor = Color.Black,
+                                checkmarkColor = Color.White
+                            )
+                        )
+                        Text("Lembrar de mim", style = MaterialTheme.typography.bodySmall, color = Color.Black)
+                    }
+                    ClickableText(
+                        text = buildAnnotatedString { append("Esqueceu a senha?") },
+                        onClick = { /* TODO */ },
+                        style = MaterialTheme.typography.bodySmall.copy(color = Color.Black)
+                    )
+                }
+            }
+            // --- Fim do Bloco de Ações de Senha ---
 
             if (serverError != null) {
                 Spacer(Modifier.height(AppSpacing.small))
@@ -260,7 +249,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onRegisterClicked: () -> Unit) {
                 )
             }
 
-            Spacer(Modifier.height(AppSpacing.medium))
+            Spacer(Modifier.height(AppSpacing.large))
 
             Button(
                 onClick = { handleLogin() },
@@ -321,8 +310,6 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onRegisterClicked: () -> Unit) {
             SocialLoginButton(text = "Entrar com Microsoft", icon = painterResource(Res.drawable.microsoft), onClick = {/*TODO*/})
             Spacer(Modifier.height(AppSpacing.medium))
             SocialLoginButton(text = "Entrar com Facebook", icon = painterResource(Res.drawable.facebook), onClick = {/*TODO*/})
-
-            Spacer(Modifier.weight(1f))
 
             val termsText = buildAnnotatedString {
                 append("Ao criar uma conta ou fazer login, você concorda com nossos ")
