@@ -13,11 +13,14 @@ import alimentandofasesapp.composeapp.generated.resources.jogo
 import alimentandofasesapp.composeapp.generated.resources.origemalimentar
 import alimentandofasesapp.composeapp.generated.resources.receitas
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -66,7 +69,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
@@ -105,9 +107,27 @@ private object AppResources {
     )
 
     val actions = listOf(
-        Action(date = "25 DEZ", title = "Ação de Natal", description = "Distribuindo sorrisos e alimentos.", location = "Comunidade A", imageRes = Res.drawable.acao_crianca),
-        Action(date = "15 JAN", title = "Sopão Solidário", description = "Aquecendo corações no inverno.", location = "Comunidade B", imageRes = Res.drawable.acao_adulto),
-        Action(date = "08 MAR", title = "Dia da Mulher", description = "Homenagem e apoio a elas.", location = "Comunidade C", imageRes = Res.drawable.acao_idoso)
+        Action(
+            date = "25 DEZ",
+            imageRes = Res.drawable.acao_crianca,
+            title = "Ação das crianças",
+            description = "Nossa Ação de Nutrição Infantil foi um sucesso! Levamos aprendizado e diversão para a sala de aula com atividades lúdicas, incluindo um \"teste cego\" de paladar.",
+            location = "Escola Municipal Sociólogo Gilberto Freyre"
+        ),
+        Action(
+            date = "15 JAN",
+            imageRes = Res.drawable.acao_adulto,
+            title = "Ação dos Adultos",
+            description = "Nossa Ação Adulto promoveu saúde no trabalho no CDC | CENTRO DE DESENVOLVIMENTO E CIDADANIA. Fizemos atendimentos nutricionais e uma palestra sobre alimentação e estresse.",
+            location = "CDC"
+        ),
+        Action(
+            date = "08 MAR",
+            imageRes = Res.drawable.acao_idoso,
+            title = "Ação dos idosos",
+            description = "Um bate-papo com especialistas sobre Sarcopenia, Hidratação e a importância das Proteínas na Terceira Idade.",
+            location = "Parque Santana"
+        )
     )
 }
 
@@ -338,15 +358,29 @@ private fun EbookCard(ebook: Ebook, onDownloadClick: () -> Unit, modifier: Modif
 
 @Composable
 private fun ActionsSection(actions: List<Action>) {
+    // Implementação de Early Return para garantir resiliência contra listas vazias.
+    if (actions.isEmpty()) {
+        return
+    }
+
     Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 32.dp, bottom = 24.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 32.dp, bottom = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Nossas Ações", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Color(0xFF333333))
-        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            "Nossas Ações",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF333333)
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // RECORRIGIDO: Utiliza LazyRow para criar um carrossel horizontal.
         LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp) // Espaçamento entre os cards.
         ) {
             items(actions) { action ->
                 ActionCard(action = action)
@@ -358,27 +392,102 @@ private fun ActionsSection(actions: List<Action>) {
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 private fun ActionCard(action: Action, modifier: Modifier = Modifier) {
+    /**
+     * Componente para exibição de uma única ação social em um carrossel.
+     * Possui largura fixa para garantir um layout consistente e compacto.
+     * Inclui animação de feedback visual no botão de ação.
+     *
+     * @param action O objeto de dados imutável contendo as informações da ação.
+     * @param modifier Modificador para customizações externas.
+     */
     Card(
         modifier = modifier.width(280.dp),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column {
             Image(
                 painter = painterResource(action.imageRes),
-                contentDescription = null,
-                modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
+                contentDescription = "Imagem ilustrativa da ${action.title}",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(16f / 10f),
                 contentScale = ContentScale.Crop
             )
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(action.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(4.dp))
-                Text(action.description, style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Spacer(Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text(action.location, style = MaterialTheme.typography.bodySmall)
+
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = action.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF5A8E5A),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Text(
+                    text = action.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 20.sp,
+                    color = Color.Black
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f, fill = false)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = "Ícone de localização",
+                            tint = Color(0xFF5A8E5A),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            text = action.location,
+                            style = MaterialTheme.typography.bodySmall,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = Color.Black
+                        )
+                    }
+
+                    // --- INÍCIO DA MODIFICAÇÃO PARA ANIMAÇÃO E RIPPLE ---
+
+                    val interactionSource = remember { MutableInteractionSource() }
+                    val isPressed by interactionSource.collectIsPressedAsState()
+
+                    val scale by animateFloatAsState(
+                        targetValue = if (isPressed) 0.95f else 1f,
+                        animationSpec = tween(durationMillis = 100, easing = FastOutSlowInEasing),
+                        label = "ButtonScaleAnimation"
+                    )
+
+                    OutlinedButton(
+                        onClick = { /* TODO: Implementar navegação */ },
+                        shape = CircleShape,
+                        border = BorderStroke(1.dp, Color(0xFF5A8E5A)),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        interactionSource = interactionSource,
+                        modifier = Modifier.graphicsLayer {
+                            scaleX = scale
+                            scaleY = scale
+                        }
+                    ) {
+                        Text("Veja aqui", fontSize = 12.sp, color = Color(0xFF333333))
+                    }
+                    // --- FIM DA MODIFICAÇÃO ---
                 }
             }
         }
@@ -448,12 +557,12 @@ private fun HydrationCalculatorBlock(modifier: Modifier = Modifier) {
                 ) {
                     Text("Calcular", color = Color(0xFFA52A2A), fontWeight = FontWeight.Bold)
                 }
-                result?.let {
-                    val resultText = it.fold(
-                        onSuccess = { "${it.amountInMl} ml/dia" },
-                        onFailure = { it.message ?: "Erro desconhecido" }
+                result?.let { resultData ->
+                    val resultText = resultData.fold(
+                        onSuccess = { successData -> "${successData.amountInMl} ml/dia" },
+                        onFailure = { exception -> exception.message ?: "Erro desconhecido" }
                     )
-                    val resultColor = if (it.isSuccess) Color(0xFF006400) else Color.Red
+                    val resultColor = if (resultData.isSuccess) Color(0xFF006400) else Color.Red
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(text = resultText, color = resultColor, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                 }
