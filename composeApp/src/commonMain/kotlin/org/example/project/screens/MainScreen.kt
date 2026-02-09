@@ -48,7 +48,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun MainScreen() {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Home) }
-    val screens = listOf(Screen.Home, Screen.Content, Screen.Community, Screen.Profile)
+    val screens = listOf(Screen.Home, Screen.Content, Screen.Community, Screen.Recipes, Screen.Profile)
     val showBottomBar = currentScreen in screens
 
     Scaffold(
@@ -114,38 +114,15 @@ fun MainScreen() {
                             onClick = { currentScreen = screen },
                             label = { Text(screen.label!!) },
                             icon = {
-                                // Diretriz de UI: Implementação de um indicador customizado (círculo)
-                                // para o item selecionado, conforme solicitado.
-                                if (isSelected) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(32.dp)
-                                            .clip(CircleShape)
-                                            .background(MaterialTheme.colorScheme.primary),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = screen.icon!!,
-                                            contentDescription = screen.label,
-                                            tint = MaterialTheme.colorScheme.onPrimary
-                                        )
-                                    }
-                                } else {
-                                    Icon(
-                                        imageVector = screen.icon!!,
-                                        contentDescription = screen.label
-                                    )
-                                }
+                                Icon(
+                                    imageVector = screen.icon!!,
+                                    contentDescription = screen.label
+                                )
                             },
                             colors = NavigationBarItemDefaults.colors(
-                                // Diretriz de UI: Cor preta para itens não selecionados para garantir contraste.
-                                unselectedIconColor = Color.Black,
-                                unselectedTextColor = Color.Black,
-                                // Diretriz de UI: O texto do item selecionado acompanha a cor primária,
-                                // mas o ícone em si é customizado (ver `icon` slot).
+                                selectedIconColor = Color.Black.copy(alpha = 0.7f),
+                                unselectedIconColor = Color.Black.copy(alpha = 0.7f),
                                 selectedTextColor = MaterialTheme.colorScheme.primary,
-                                // Diretriz Arquitetural: O indicador padrão do M3 é desabilitado
-                                // para permitir a implementação do indicador circular customizado.
                                 indicatorColor = Color.Transparent
                             )
                         )
@@ -159,6 +136,7 @@ fun MainScreen() {
                 is Screen.Home -> HomeScreen()
                 is Screen.Content -> ContentScreen()
                 is Screen.Community -> CommunityScreen()
+                is Screen.Recipes -> RecipesScreen()
                 is Screen.Profile -> ProfileScreen()
                 else -> HomeScreen()
             }

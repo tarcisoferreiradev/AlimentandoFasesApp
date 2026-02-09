@@ -79,8 +79,15 @@ fun App(uiReady: Boolean = false) {
                         onSkipClicked = { currentScreen = Screen.Main },
                         onBackClicked = { currentScreen = Screen.RegistrationBirthday }
                     )
-                    is Screen.Main -> MainScreen()
-                    is Screen.Home, is Screen.Content, is Screen.Community, is Screen.Profile -> MainScreen()
+                    // ARQUITETURA: Todas as telas que pertencem à navegação principal (pós-login)
+                    // são consolidadas em um único ramo. A MainScreen contém sua própria lógica de
+                    // navegação interna (BottomBar) e é a única responsável por gerenciar seu estado.
+                    is Screen.Main,
+                    is Screen.Home,
+                    is Screen.Content,
+                    is Screen.Community,
+                    is Screen.Recipes,
+                    is Screen.Profile -> MainScreen()
                 }
             }
         }

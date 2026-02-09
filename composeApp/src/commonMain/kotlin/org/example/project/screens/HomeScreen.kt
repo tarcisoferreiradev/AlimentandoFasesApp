@@ -9,6 +9,10 @@ import alimentandofasesapp.composeapp.generated.resources.ebook_infantil
 import alimentandofasesapp.composeapp.generated.resources.ebook_lanches
 import alimentandofasesapp.composeapp.generated.resources.ebook_terceira_idade
 import alimentandofasesapp.composeapp.generated.resources.fasesdavida
+// import alimentandofasesapp.composeapp.generated.resources.ic_instagram
+// import alimentandofasesapp.composeapp.generated.resources.img_1
+// import alimentandofasesapp.composeapp.generated.resources.img_2
+// import alimentandofasesapp.composeapp.generated.resources.img_3
 import alimentandofasesapp.composeapp.generated.resources.jogo
 import alimentandofasesapp.composeapp.generated.resources.origemalimentar
 import alimentandofasesapp.composeapp.generated.resources.receitas
@@ -19,11 +23,13 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -47,6 +53,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
@@ -65,6 +72,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -79,15 +88,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.example.project.navigation.Screen
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
+import kotlin.math.roundToInt
 
 // =====================================================================================
-// CAMADAS DE DADOS E DOMÍNIO (MOCK)
-// Diretriz Arquitetural: Em uma aplicação real, estas classes e objetos seriam
-// movidos para seus próprios arquivos nos módulos `data` e `domain` para
-// aderir aos princípios de Clean Architecture e Separação de Responsabilidades.
+// DATA AND DOMAIN LAYERS (MOCK)
+// Architectural Guideline: In a real application, these classes and objects would be
+// moved to their own files in the `data` and `domain` modules to
+// adhere to the principles of Clean Architecture and Separation of Concerns.
 // =====================================================================================
 
 @OptIn(ExperimentalResourceApi::class)
@@ -136,6 +147,25 @@ private data class Ebook(val imageRes: DrawableResource, val contentDescription:
 private data class WaterIntakeParams(val weight: Int, val age: Int)
 private data class WaterIntakeResult(val amountInMl: Int)
 
+private val WaterIntakeResult.liters: Float get() = amountInMl / 1000f
+private val WaterIntakeResult.glassesOf250ml: Int get() = (amountInMl / 250f).roundToInt()
+
+/**
+ * Formats a [Float] to a Brazilian-style decimal string (e.g., "1,50").
+ * This KMP-compatible function ensures consistent, locale-independent formatting
+ * for display purposes, avoiding platform-specific APIs like `String.format`.
+ *
+ * @return A [String] representation with two decimal places, using a comma as the separator.
+ */
+private fun Float.toBrazilianDecimalFormat(): String {
+    val integerPart = toInt()
+    // Isolate the two most significant decimal digits.
+    val decimalPart = ((this * 100).roundToInt() % 100)
+    // Ensure the decimal part is always two digits by padding with a leading zero if needed.
+    val decimalString = decimalPart.toString().padStart(2, '0')
+    return "$integerPart,$decimalString"
+}
+
 private class CalculateDailyWaterIntakeUseCase {
     operator fun invoke(params: WaterIntakeParams): Result<WaterIntakeResult> {
         if (params.weight <= 0) return Result.failure(IllegalArgumentException("O peso deve ser um valor positivo."))
@@ -151,10 +181,10 @@ private class CalculateDailyWaterIntakeUseCase {
 }
 
 // =====================================================================================
-// CAMADA DE UI (COMPOSABLES)
-// DIRETRIZ ARQUITETURAL: O uso de Scaffold é introduzido para gerenciar
-// corretamente a estrutura da tela e os WindowInsets, permitindo o efeito
-// Edge-to-Edge sem que as barras do sistema obstruam o conteúdo interativo.
+// UI LAYER (COMPOSABLES)
+// ARCHITECTURAL GUIDELINE: The use of Scaffold is introduced to correctly manage
+// the screen structure and WindowInsets, allowing for an Edge-to-Edge effect
+// without the system bars obstructing interactive content.
 // =====================================================================================
 
 @Composable
@@ -162,17 +192,56 @@ expect fun isLandscape(): Boolean
 
 @Composable
 fun HomeScreen() {
-    if (isLandscape()) {
-        LandscapeHomeScreen()
-        return
+    // --- STATE HOISTING: The calculator's state is managed here, in the HomeScreen scope. ---
+    var calculatorWeight by rememberSaveable { mutableStateOf(70) }
+    var calculatorSelectedAgeIndex by rememberSaveable { mutableStateOf(1) }
+    // Result<T> is not Parcelable by default, so a custom saver is needed for rememberSaveable.
+    var calculatorResult: Result<WaterIntakeResult>? by rememberSaveable(stateSaver = resultSaver()) {
+        mutableStateOf(null)
     }
 
-    PortraitHomeScreen()
+    val useCase = remember { CalculateDailyWaterIntakeUseCase() }
+    val calculatorAge = when (calculatorSelectedAgeIndex) {
+        0 -> 16; 1 -> 30; 2 -> 60; else -> 70
+    }
+
+    fun onCalculate() {
+        calculatorResult = useCase(WaterIntakeParams(calculatorWeight, calculatorAge))
+    }
+
+    val isLandscape = isLandscape()
+
+    if (isLandscape) {
+        LandscapeHomeScreen(
+            weight = calculatorWeight,
+            selectedAgeIndex = calculatorSelectedAgeIndex,
+            result = calculatorResult,
+            onWeightChange = { calculatorWeight = it },
+            onAgeIndexChange = { calculatorSelectedAgeIndex = it },
+            onCalculateClick = ::onCalculate
+        )
+    } else {
+        PortraitHomeScreen(
+            weight = calculatorWeight,
+            selectedAgeIndex = calculatorSelectedAgeIndex,
+            result = calculatorResult,
+            onWeightChange = { calculatorWeight = it },
+            onAgeIndexChange = { calculatorSelectedAgeIndex = it },
+            onCalculateClick = ::onCalculate
+        )
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun PortraitHomeScreen() {
+private fun PortraitHomeScreen(
+    weight: Int,
+    selectedAgeIndex: Int,
+    result: Result<WaterIntakeResult>?,
+    onWeightChange: (Int) -> Unit,
+    onAgeIndexChange: (Int) -> Unit,
+    onCalculateClick: () -> Unit
+) {
     Scaffold(
         containerColor = Color(0xFFe6dfca),
         contentWindowInsets = WindowInsets(0.dp)
@@ -187,14 +256,32 @@ private fun PortraitHomeScreen() {
             item { CarouselSection(items = AppResources.carouselItems) }
             item { EbooksSection(ebooks = AppResources.ebooks) }
             item { ActionsSection(actions = AppResources.actions) }
-            item { HydrationCalculatorBlock(modifier = Modifier.padding(vertical = 24.dp)) }
+            item {
+                HydrationCalculatorBlock(
+                    modifier = Modifier.padding(vertical = 24.dp),
+                    weight = weight,
+                    selectedAgeIndex = selectedAgeIndex,
+                    result = result,
+                    onWeightChange = onWeightChange,
+                    onAgeIndexChange = onAgeIndexChange,
+                    onCalculateClick = onCalculateClick
+                )
+            }
+            item { ContactCtaSection() }
         }
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun LandscapeHomeScreen() {
+private fun LandscapeHomeScreen(
+    weight: Int,
+    selectedAgeIndex: Int,
+    result: Result<WaterIntakeResult>?,
+    onWeightChange: (Int) -> Unit,
+    onAgeIndexChange: (Int) -> Unit,
+    onCalculateClick: () -> Unit
+) {
     Scaffold(
         containerColor = Color(0xFFe6dfca),
         contentWindowInsets = WindowInsets(0.dp)
@@ -215,11 +302,22 @@ private fun LandscapeHomeScreen() {
             ) {
                 item { EbooksSection(ebooks = AppResources.ebooks) }
                 item { ActionsSection(actions = AppResources.actions) }
-                item { HydrationCalculatorBlock() }
+                item {
+                    HydrationCalculatorBlock(
+                        weight = weight,
+                        selectedAgeIndex = selectedAgeIndex,
+                        result = result,
+                        onWeightChange = onWeightChange,
+                        onAgeIndexChange = onAgeIndexChange,
+                        onCalculateClick = onCalculateClick
+                    )
+                }
+                item { ContactCtaSection() }
             }
         }
     }
 }
+
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -358,7 +456,7 @@ private fun EbookCard(ebook: Ebook, onDownloadClick: () -> Unit, modifier: Modif
 
 @Composable
 private fun ActionsSection(actions: List<Action>) {
-    // Implementação de Early Return para garantir resiliência contra listas vazias.
+    // Implementação de Early Return para reduzir complexidade ciclomática.
     if (actions.isEmpty()) {
         return
     }
@@ -494,77 +592,401 @@ private fun ActionCard(action: Action, modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * Orquestra a UI da Calculadora de Hidratação. Este componente agora é 'stateless',
+ * recebendo todo o estado e eventos de um componente pai, em conformidade com o
+ * padrão de elevação de estado (state hoisting).
+ */
 @Composable
-private fun HydrationCalculatorBlock(modifier: Modifier = Modifier) {
-    var weight by remember { mutableStateOf(70) }
-    var age by remember { mutableStateOf(30) }
-    var result by remember { mutableStateOf<Result<WaterIntakeResult>?>(null) }
-    val useCase = remember { CalculateDailyWaterIntakeUseCase() }
-
-    fun calculate() {
-        result = useCase(WaterIntakeParams(weight, age))
-    }
-
-    LaunchedEffect(Unit) {
-        calculate()
-    }
+private fun HydrationCalculatorBlock(
+    weight: Int,
+    selectedAgeIndex: Int,
+    result: Result<WaterIntakeResult>?,
+    onWeightChange: (Int) -> Unit,
+    onAgeIndexChange: (Int) -> Unit,
+    onCalculateClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val primaryColor = Color(0xFF5A8E5A)
+    val backgroundColor = Color(0xFFFDFCEC)
+    val resultBackgroundColor = Color(0xFFEFFFF0)
 
     Column(
         modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Calcule sua Hidratação Diária", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Color(0xFF333333), modifier = Modifier.padding(bottom = 24.dp))
+        Text(
+            "Calcule sua Meta Pessoal",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF333333),
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFFDFBFA)),
-            elevation = CardDefaults.cardElevation(4.dp)
+            border = BorderStroke(1.dp, primaryColor.copy(alpha = 0.5f)),
+            colors = CardDefaults.cardColors(containerColor = backgroundColor),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+            Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
+                InputSection(
+                    weight = weight,
+                    // A coerção do valor é movida para o lambda de evento.
+                    onWeightChange = { newWeight -> onWeightChange(newWeight.coerceIn(10, 200)) },
+                    selectedAgeIndex = selectedAgeIndex,
+                    onAgeIndexChange = onAgeIndexChange,
+                    onCalculateClick = onCalculateClick,
+                    primaryColor = primaryColor,
+                    modifier = Modifier.weight(1f)
+                )
+
+                Spacer(modifier = Modifier.width(1.dp).fillMaxHeight().background(primaryColor.copy(alpha = 0.5f)))
+
+                ResultSection(
+                    result = result,
+                    backgroundColor = resultBackgroundColor,
+                    primaryColor = primaryColor,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+
+/**
+ * Seção de entrada de dados da calculadora (painel esquerdo).
+ *
+ * @param primaryColor Cor principal para os elementos interativos.
+ */
+@Composable
+private fun InputSection(
+    weight: Int,
+    onWeightChange: (Int) -> Unit,
+    selectedAgeIndex: Int,
+    onAgeIndexChange: (Int) -> Unit,
+    onCalculateClick: () -> Unit,
+    primaryColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        // ATUALIZADO: Cor do texto para preto.
+        Text("Seu peso (kg):", style = MaterialTheme.typography.bodyLarge, color = Color.Black)
+        WeightStepper(
+            weight = weight,
+            onDecrement = { onWeightChange(weight - 1) },
+            onIncrement = { onWeightChange(weight + 1) },
+            color = primaryColor
+        )
+
+        // ATUALIZADO: Cor do texto para preto.
+        Text("Sua faixa de idade:", style = MaterialTheme.typography.bodyLarge, color = Color.Black)
+        AgeRangeSelector(
+            selectedIndex = selectedAgeIndex,
+            onIndexSelected = onAgeIndexChange,
+            color = primaryColor
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(
+            onClick = onCalculateClick,
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
+        ) {
+            Text("Calcular Meta", color = Color.White, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+/**
+ * Seção de exibição do resultado (painel direito).
+ * Inclui animação de contagem para o valor em litros e trata o estado inicial.
+ */
+@Composable
+private fun ResultSection(
+    result: Result<WaterIntakeResult>?,
+    backgroundColor: Color,
+    primaryColor: Color,
+    modifier: Modifier = Modifier
+) {
+    // --- Lógica de Animação ---
+    val targetLiters = result?.getOrNull()?.liters ?: 0.0f
+    val animatedLiters by animateFloatAsState(
+        targetValue = targetLiters,
+        animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
+        label = "LitersAnimation"
+    )
+
+    Column(
+        modifier = modifier.fillMaxHeight().background(backgroundColor).padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            "Sua meta diária recomendada é:",
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            color = Color.Black
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        // Exibe o valor animado, formatado para duas casas decimais.
+        val resultText = animatedLiters.toBrazilianDecimalFormat()
+
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(
+                resultText,
+                style = MaterialTheme.typography.displayLarge,
+                fontWeight = FontWeight.Bold,
+                color = primaryColor
+            )
+            Text(
+                " Litros",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Normal,
+                color = primaryColor,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+        }
+
+        Spacer(Modifier.height(16.dp))
+        Text(
+            "O que equivale a aproximadamente:",
+            style = MaterialTheme.typography.bodySmall,
+            textAlign = TextAlign.Center,
+            color = Color.Black
+        )
+
+        // CORREÇÃO CRÍTICA: A lógica agora verifica se o resultado é nulo ou se os litros são zero.
+        // Isso garante que o estado inicial (0.00 Litros) mostre a mensagem placeholder correta.
+        val glassesText = result?.getOrNull()?.takeIf { it.liters > 0 }?.let {
+            "${it.glassesOf250ml} copos de 250ml"
+        } ?: "(Insira seus dados para calcular.)"
+
+        Text(
+            glassesText,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.Gray,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+    }
+}
+
+
+/**
+ * Componente de stepper para seleção de peso.
+ */
+@Composable
+private fun WeightStepper(
+    weight: Int,
+    onDecrement: () -> Unit,
+    onIncrement: () -> Unit,
+    color: Color
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        val buttonModifier = Modifier.size(40.dp).clip(CircleShape)
+
+        IconButton(onClick = onDecrement, modifier = buttonModifier.background(color)) {
+            Icon(Icons.Default.Remove, contentDescription = "Diminuir peso", tint = Color.White)
+        }
+
+        Text(
+            text = weight.toString(),
+            style = MaterialTheme.typography.displayMedium,
+            fontWeight = FontWeight.Bold,
+            // ATUALIZADO: Cor do número do peso alinhada ao verde padrão.
+            color = color
+        )
+
+        IconButton(onClick = onIncrement, modifier = buttonModifier.background(color)) {
+            Icon(Icons.Default.Add, contentDescription = "Aumentar peso", tint = Color.White)
+        }
+    }
+}
+
+/**
+ * Componente para seleção de faixa etária usando botões de alternância.
+ * Utiliza textos mais curtos para garantir a visibilidade em layouts compactos.
+ */
+@Composable
+private fun AgeRangeSelector(
+    selectedIndex: Int,
+    onIndexSelected: (Int) -> Unit,
+    color: Color
+) {
+    // CORREÇÃO: Os textos foram encurtados para melhor adaptação ao layout do botão.
+    val ageRanges = listOf("Até 17 anos", "18 a 55 anos", "56 a 65 anos", "66+ anos")
+
+    // Cria um grid com 2 colunas para os botões.
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            (0..1).forEach { index ->
+                AgeButton(
+                    text = ageRanges[index],
+                    isSelected = selectedIndex == index,
+                    onClick = { onIndexSelected(index) },
+                    selectedColor = color,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            (2..3).forEach { index ->
+                AgeButton(
+                    text = ageRanges[index],
+                    isSelected = selectedIndex == index,
+                    onClick = { onIndexSelected(index) },
+                    selectedColor = color,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Botão individual para a seleção de faixa etária.
+ */
+@Composable
+private fun AgeButton(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    selectedColor: Color,
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor = if (isSelected) selectedColor else Color.Transparent
+    val contentColor = if (isSelected) Color.White else Color.Black
+    val border = if (isSelected) BorderStroke(1.dp, selectedColor) else BorderStroke(1.dp, Color.Gray)
+
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier.height(48.dp),
+        shape = RoundedCornerShape(50),
+        colors = ButtonDefaults.outlinedButtonColors(containerColor = backgroundColor, contentColor = contentColor),
+        border = border,
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        // ATUALIZADO: Removido maxLines e overflow para permitir que o texto quebre
+        // naturalmente em duas linhas quando necessário.
+        Text(
+            text,
+            fontSize = 12.sp,
+            textAlign = TextAlign.Center // Garante o alinhamento central se o texto quebrar.
+        )
+    }
+}
+
+/**
+ * A custom [Saver] for [Result] objects, allowing them to be stored by [rememberSaveable].
+ * As `Result` is an inline class and not directly Parcelable, this saver persists the successful value
+ * or null if the result is a failure, ensuring state can be restored across configuration changes.
+ */
+@Suppress("UNCHECKED_CAST")
+private fun <T : Any> resultSaver(): Saver<Result<T>?, Any> {
+    return Saver(
+        save = { it?.getOrNull() },
+        restore = { saved ->
+            saved?.let { Result.success(it as T) }
+        }
+    )
+}
+
+/**
+ * Proposta Final e Corrigida: "O Cartão de Visita" Minimalista.
+ *
+ * Esta implementação abandona a grade do Instagram em favor de um design limpo,
+ * profissional e funcional. O título foi ajustado para "Onde nos achar",
+ * focando na funcionalidade de localização dos contatos.
+ *
+ * @param modifier O modificador a ser aplicado ao contêiner da seção.
+ */
+@OptIn(ExperimentalResourceApi::class)
+@Composable
+private fun ContactCtaSection(modifier: Modifier = Modifier) {
+    val primaryColor = Color(0xFF5A8E5A)
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 48.dp, bottom = 48.dp, start = 16.dp, end = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        // ATUALIZADO: Título ajustado para maior clareza e cor para preto.
+        Text(
+            "Onde nos achar",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
+                // Linha do Instagram
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.clickable { /* TODO: Implementar lógica para abrir a URL do Instagram */ }
                 ) {
-                    Text("Seu peso (kg)", fontWeight = FontWeight.Medium)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = { if (weight > 1) weight-- }) { Icon(Icons.Default.Remove, "Diminuir peso", tint = Color(0xFFA52A2A)) }
-                        Text(weight.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        IconButton(onClick = { weight++ }) { Icon(Icons.Default.Add, "Aumentar peso", tint = Color(0xFFA52A2A)) }
-                    }
-                }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Sua idade", fontWeight = FontWeight.Medium)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = { if (age > 1) age-- }) { Icon(Icons.Default.Remove, "Diminuir idade", tint = Color(0xFFA52A2A)) }
-                        Text(age.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        IconButton(onClick = { age++ }) { Icon(Icons.Default.Add, "Aumentar idade", tint = Color(0xFFA52A2A)) }
-                    }
-                }
-                OutlinedButton(
-                    onClick = { calculate() },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, Color(0xFFDCD6C8))
-                ) {
-                    Text("Calcular", color = Color(0xFFA52A2A), fontWeight = FontWeight.Bold)
-                }
-                result?.let { resultData ->
-                    val resultText = resultData.fold(
-                        onSuccess = { successData -> "${successData.amountInMl} ml/dia" },
-                        onFailure = { exception -> exception.message ?: "Erro desconhecido" }
+                    // TODO: [RECURSO PENDENTE] A exibição do ícone do Instagram foi desabilitada para evitar erro de compilação.
+                    // Adicionar o drawable `ic_instagram.xml` e descomentar o código abaixo.
+                    /*
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_instagram),
+                        contentDescription = null,
+                        tint = primaryColor,
+                        modifier = Modifier.size(28.dp)
                     )
-                    val resultColor = if (resultData.isSuccess) Color(0xFF006400) else Color.Red
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = resultText, color = resultColor, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                    */
+                    Text(
+                        text = "@alimentandofases",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.Black
+                    )
+                }
+
+                // Linha do Email
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.clickable { /* TODO: Implementar lógica para abrir cliente de email */ }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Email,
+                        contentDescription = null,
+                        tint = primaryColor,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Text(
+                        text = "contato@alimentandofases.com",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.Black
+                    )
                 }
             }
         }
