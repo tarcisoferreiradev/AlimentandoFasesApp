@@ -9,13 +9,11 @@ import alimentandofasesapp.composeapp.generated.resources.ebook_infantil
 import alimentandofasesapp.composeapp.generated.resources.ebook_lanches
 import alimentandofasesapp.composeapp.generated.resources.ebook_terceira_idade
 import alimentandofasesapp.composeapp.generated.resources.fasesdavida
-// import alimentandofasesapp.composeapp.generated.resources.ic_instagram
-// import alimentandofasesapp.composeapp.generated.resources.img_1
-// import alimentandofasesapp.composeapp.generated.resources.img_2
-// import alimentandofasesapp.composeapp.generated.resources.img_3
+import alimentandofasesapp.composeapp.generated.resources.ic_instagram_official
 import alimentandofasesapp.composeapp.generated.resources.jogo
 import alimentandofasesapp.composeapp.generated.resources.origemalimentar
 import alimentandofasesapp.composeapp.generated.resources.receitas
+import alimentandofasesapp.composeapp.generated.resources.rede_social
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -28,20 +26,22 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -53,7 +53,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
@@ -65,6 +64,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -81,14 +81,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.example.project.navigation.Screen
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
@@ -96,9 +97,6 @@ import kotlin.math.roundToInt
 
 // =====================================================================================
 // DATA AND DOMAIN LAYERS (MOCK)
-// Architectural Guideline: In a real application, these classes and objects would be
-// moved to their own files in the `data` and `domain` modules to
-// adhere to the principles of Clean Architecture and Separation of Concerns.
 // =====================================================================================
 
 @OptIn(ExperimentalResourceApi::class)
@@ -122,7 +120,7 @@ private object AppResources {
             date = "25 DEZ",
             imageRes = Res.drawable.acao_crianca,
             title = "Ação das crianças",
-            description = "Nossa Ação de Nutrição Infantil foi um sucesso! Levamos aprendizado e diversão para a sala de aula com atividades lúdicas, incluindo um \"teste cego\" de paladar.",
+            description = "Nossa Ação de Nutrição Infantil foi um sucesso! Levamos aprendizado e diversão para a sala de aula com atividades lúdicas, incluindo um 'teste cego' de paladar.",
             location = "Escola Municipal Sociólogo Gilberto Freyre"
         ),
         Action(
@@ -150,18 +148,9 @@ private data class WaterIntakeResult(val amountInMl: Int)
 private val WaterIntakeResult.liters: Float get() = amountInMl / 1000f
 private val WaterIntakeResult.glassesOf250ml: Int get() = (amountInMl / 250f).roundToInt()
 
-/**
- * Formats a [Float] to a Brazilian-style decimal string (e.g., "1,50").
- * This KMP-compatible function ensures consistent, locale-independent formatting
- * for display purposes, avoiding platform-specific APIs like `String.format`.
- *
- * @return A [String] representation with two decimal places, using a comma as the separator.
- */
 private fun Float.toBrazilianDecimalFormat(): String {
     val integerPart = toInt()
-    // Isolate the two most significant decimal digits.
     val decimalPart = ((this * 100).roundToInt() % 100)
-    // Ensure the decimal part is always two digits by padding with a leading zero if needed.
     val decimalString = decimalPart.toString().padStart(2, '0')
     return "$integerPart,$decimalString"
 }
@@ -182,9 +171,6 @@ private class CalculateDailyWaterIntakeUseCase {
 
 // =====================================================================================
 // UI LAYER (COMPOSABLES)
-// ARCHITECTURAL GUIDELINE: The use of Scaffold is introduced to correctly manage
-// the screen structure and WindowInsets, allowing for an Edge-to-Edge effect
-// without the system bars obstructing interactive content.
 // =====================================================================================
 
 @Composable
@@ -192,10 +178,8 @@ expect fun isLandscape(): Boolean
 
 @Composable
 fun HomeScreen() {
-    // --- STATE HOISTING: The calculator's state is managed here, in the HomeScreen scope. ---
     var calculatorWeight by rememberSaveable { mutableStateOf(70) }
     var calculatorSelectedAgeIndex by rememberSaveable { mutableStateOf(1) }
-    // Result<T> is not Parcelable by default, so a custom saver is needed for rememberSaveable.
     var calculatorResult: Result<WaterIntakeResult>? by rememberSaveable(stateSaver = resultSaver()) {
         mutableStateOf(null)
     }
@@ -456,7 +440,6 @@ private fun EbookCard(ebook: Ebook, onDownloadClick: () -> Unit, modifier: Modif
 
 @Composable
 private fun ActionsSection(actions: List<Action>) {
-    // Implementação de Early Return para reduzir complexidade ciclomática.
     if (actions.isEmpty()) {
         return
     }
@@ -475,10 +458,9 @@ private fun ActionsSection(actions: List<Action>) {
         )
         Spacer(modifier = Modifier.height(24.dp))
 
-        // RECORRIGIDO: Utiliza LazyRow para criar um carrossel horizontal.
         LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp) // Espaçamento entre os cards.
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             items(actions) { action ->
                 ActionCard(action = action)
@@ -490,14 +472,6 @@ private fun ActionsSection(actions: List<Action>) {
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 private fun ActionCard(action: Action, modifier: Modifier = Modifier) {
-    /**
-     * Componente para exibição de uma única ação social em um carrossel.
-     * Possui largura fixa para garantir um layout consistente e compacto.
-     * Inclui animação de feedback visual no botão de ação.
-     *
-     * @param action O objeto de dados imutável contendo as informações da ação.
-     * @param modifier Modificador para customizações externas.
-     */
     Card(
         modifier = modifier.width(280.dp),
         shape = RoundedCornerShape(16.dp),
@@ -561,8 +535,6 @@ private fun ActionCard(action: Action, modifier: Modifier = Modifier) {
                         )
                     }
 
-                    // --- INÍCIO DA MODIFICAÇÃO PARA ANIMAÇÃO E RIPPLE ---
-
                     val interactionSource = remember { MutableInteractionSource() }
                     val isPressed by interactionSource.collectIsPressedAsState()
 
@@ -585,18 +557,12 @@ private fun ActionCard(action: Action, modifier: Modifier = Modifier) {
                     ) {
                         Text("Veja aqui", fontSize = 12.sp, color = Color(0xFF333333))
                     }
-                    // --- FIM DA MODIFICAÇÃO ---
                 }
             }
         }
     }
 }
 
-/**
- * Orquestra a UI da Calculadora de Hidratação. Este componente agora é 'stateless',
- * recebendo todo o estado e eventos de um componente pai, em conformidade com o
- * padrão de elevação de estado (state hoisting).
- */
 @Composable
 private fun HydrationCalculatorBlock(
     weight: Int,
@@ -633,7 +599,6 @@ private fun HydrationCalculatorBlock(
             Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
                 InputSection(
                     weight = weight,
-                    // A coerção do valor é movida para o lambda de evento.
                     onWeightChange = { newWeight -> onWeightChange(newWeight.coerceIn(10, 200)) },
                     selectedAgeIndex = selectedAgeIndex,
                     onAgeIndexChange = onAgeIndexChange,
@@ -656,11 +621,6 @@ private fun HydrationCalculatorBlock(
 }
 
 
-/**
- * Seção de entrada de dados da calculadora (painel esquerdo).
- *
- * @param primaryColor Cor principal para os elementos interativos.
- */
 @Composable
 private fun InputSection(
     weight: Int,
@@ -676,7 +636,6 @@ private fun InputSection(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        // ATUALIZADO: Cor do texto para preto.
         Text("Seu peso (kg):", style = MaterialTheme.typography.bodyLarge, color = Color.Black)
         WeightStepper(
             weight = weight,
@@ -685,7 +644,6 @@ private fun InputSection(
             color = primaryColor
         )
 
-        // ATUALIZADO: Cor do texto para preto.
         Text("Sua faixa de idade:", style = MaterialTheme.typography.bodyLarge, color = Color.Black)
         AgeRangeSelector(
             selectedIndex = selectedAgeIndex,
@@ -706,10 +664,6 @@ private fun InputSection(
     }
 }
 
-/**
- * Seção de exibição do resultado (painel direito).
- * Inclui animação de contagem para o valor em litros e trata o estado inicial.
- */
 @Composable
 private fun ResultSection(
     result: Result<WaterIntakeResult>?,
@@ -717,7 +671,6 @@ private fun ResultSection(
     primaryColor: Color,
     modifier: Modifier = Modifier
 ) {
-    // --- Lógica de Animação ---
     val targetLiters = result?.getOrNull()?.liters ?: 0.0f
     val animatedLiters by animateFloatAsState(
         targetValue = targetLiters,
@@ -739,7 +692,6 @@ private fun ResultSection(
 
         Spacer(Modifier.height(16.dp))
 
-        // Exibe o valor animado, formatado para duas casas decimais.
         val resultText = animatedLiters.toBrazilianDecimalFormat()
 
         Row(verticalAlignment = Alignment.Bottom) {
@@ -766,8 +718,6 @@ private fun ResultSection(
             color = Color.Black
         )
 
-        // CORREÇÃO CRÍTICA: A lógica agora verifica se o resultado é nulo ou se os litros são zero.
-        // Isso garante que o estado inicial (0.00 Litros) mostre a mensagem placeholder correta.
         val glassesText = result?.getOrNull()?.takeIf { it.liters > 0 }?.let {
             "${it.glassesOf250ml} copos de 250ml"
         } ?: "(Insira seus dados para calcular.)"
@@ -783,9 +733,6 @@ private fun ResultSection(
 }
 
 
-/**
- * Componente de stepper para seleção de peso.
- */
 @Composable
 private fun WeightStepper(
     weight: Int,
@@ -807,7 +754,6 @@ private fun WeightStepper(
             text = weight.toString(),
             style = MaterialTheme.typography.displayMedium,
             fontWeight = FontWeight.Bold,
-            // ATUALIZADO: Cor do número do peso alinhada ao verde padrão.
             color = color
         )
 
@@ -817,20 +763,14 @@ private fun WeightStepper(
     }
 }
 
-/**
- * Componente para seleção de faixa etária usando botões de alternância.
- * Utiliza textos mais curtos para garantir a visibilidade em layouts compactos.
- */
 @Composable
 private fun AgeRangeSelector(
     selectedIndex: Int,
     onIndexSelected: (Int) -> Unit,
     color: Color
 ) {
-    // CORREÇÃO: Os textos foram encurtados para melhor adaptação ao layout do botão.
     val ageRanges = listOf("Até 17 anos", "18 a 55 anos", "56 a 65 anos", "66+ anos")
 
-    // Cria um grid com 2 colunas para os botões.
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             (0..1).forEach { index ->
@@ -857,9 +797,6 @@ private fun AgeRangeSelector(
     }
 }
 
-/**
- * Botão individual para a seleção de faixa etária.
- */
 @Composable
 private fun AgeButton(
     text: String,
@@ -880,21 +817,14 @@ private fun AgeButton(
         border = border,
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
     ) {
-        // ATUALIZADO: Removido maxLines e overflow para permitir que o texto quebre
-        // naturalmente em duas linhas quando necessário.
         Text(
             text,
             fontSize = 12.sp,
-            textAlign = TextAlign.Center // Garante o alinhamento central se o texto quebrar.
+            textAlign = TextAlign.Center
         )
     }
 }
 
-/**
- * A custom [Saver] for [Result] objects, allowing them to be stored by [rememberSaveable].
- * As `Result` is an inline class and not directly Parcelable, this saver persists the successful value
- * or null if the result is a failure, ensuring state can be restored across configuration changes.
- */
 @Suppress("UNCHECKED_CAST")
 private fun <T : Any> resultSaver(): Saver<Result<T>?, Any> {
     return Saver(
@@ -905,89 +835,120 @@ private fun <T : Any> resultSaver(): Saver<Result<T>?, Any> {
     )
 }
 
-/**
- * Proposta Final e Corrigida: "O Cartão de Visita" Minimalista.
- *
- * Esta implementação abandona a grade do Instagram em favor de um design limpo,
- * profissional e funcional. O título foi ajustado para "Onde nos achar",
- * focando na funcionalidade de localização dos contatos.
- *
- * @param modifier O modificador a ser aplicado ao contêiner da seção.
- */
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 private fun ContactCtaSection(modifier: Modifier = Modifier) {
-    val primaryColor = Color(0xFF5A8E5A)
-
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 48.dp, bottom = 48.dp, start = 16.dp, end = 16.dp),
+            .padding(top = 24.dp, bottom = 48.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // ATUALIZADO: Título ajustado para maior clareza e cor para preto.
         Text(
-            "Onde nos achar",
+            text = "Onde nos achar",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = Color.Black
         )
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .clip(RoundedCornerShape(16.dp))
         ) {
-            Column(
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                // Linha do Instagram
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.clickable { /* TODO: Implementar lógica para abrir a URL do Instagram */ }
-                ) {
-                    // TODO: [RECURSO PENDENTE] A exibição do ícone do Instagram foi desabilitada para evitar erro de compilação.
-                    // Adicionar o drawable `ic_instagram.xml` e descomentar o código abaixo.
-                    /*
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_instagram),
-                        contentDescription = null,
-                        tint = primaryColor,
-                        modifier = Modifier.size(28.dp)
-                    )
-                    */
-                    Text(
-                        text = "@alimentandofases",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.Black
-                    )
-                }
+            Image(
+                painter = painterResource(Res.drawable.rede_social),
+                contentDescription = "Banner de contato: Fique por dentro, acompanhe as novidades e nos siga no @alimentandofases",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(2f),
+                contentScale = ContentScale.FillWidth
+            )
 
-                // Linha do Email
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.clickable { /* TODO: Implementar lógica para abrir cliente de email */ }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Email,
-                        contentDescription = null,
-                        tint = primaryColor,
-                        modifier = Modifier.size(28.dp)
-                    )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CustomFollowButton(modifier = Modifier.offset(y = 125.dp))
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalResourceApi::class)
+@Composable
+private fun CustomFollowButton(modifier: Modifier = Modifier) {
+    val primaryColor = Color(0xFF5A8E5A)
+    val buttonHeight = 60.dp
+    val buttonWidth = 250.dp
+
+    val uriHandler = LocalUriHandler.current
+    val instagramUrl = "https://www.instagram.com/alimentandofases?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+
+    Box(
+        modifier = modifier
+            .clickable(
+                onClick = { uriHandler.openUri(instagramUrl) }
+            ),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        Box(
+            modifier = Modifier.padding(top = 15.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Surface(
+                modifier = Modifier
+                    .width(buttonWidth)
+                    .height(buttonHeight)
+                    .offset(x = 4.dp, y = 4.dp),
+                shape = CircleShape,
+                color = Color.Black
+            ) {}
+
+            Surface(
+                modifier = Modifier
+                    .width(buttonWidth)
+                    .height(buttonHeight),
+                shape = CircleShape,
+                color = primaryColor,
+                border = BorderStroke(2.dp, Color.Black)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
                     Text(
-                        text = "contato@alimentandofases.com",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.Black
+                        "NOS SIGA",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
                     )
                 }
+            }
+        }
+
+        Card(
+            modifier = Modifier.zIndex(1f),
+            shape = CircleShape,
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            border = BorderStroke(1.dp, Color.LightGray)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_instagram_official),
+                    contentDescription = null,
+                    tint = Color.Black,
+                    modifier = Modifier.size(14.dp)
+                )
+                Text(
+                    text = "@alimentandofases",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.Black
+                )
             }
         }
     }
