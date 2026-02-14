@@ -58,6 +58,7 @@ kotlin {
                 implementation(libs.androidx.lifecycle.runtimeCompose)
                 implementation(compose.animation)
                 implementation(compose.animationGraphics)
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
             }
         }
         val androidMain by getting {
@@ -65,6 +66,7 @@ kotlin {
                 implementation(compose.preview)
                 implementation(libs.androidx.activity.compose)
                 implementation(libs.androidx.splashscreen) // Adicionado para a splash screen
+                implementation("androidx.work:work-runtime-ktx:2.9.0")
             }
         }
         val jvmMain by getting {

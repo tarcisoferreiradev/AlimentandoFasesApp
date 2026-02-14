@@ -44,8 +44,9 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        val notificationService = NotificationService(this)
-        notificationService.createNotificationChannel()
+        // A instanciação do NotificationService é suficiente.
+        // O canal de notificação agora é criado em seu bloco `init`.
+        NotificationService(this)
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {

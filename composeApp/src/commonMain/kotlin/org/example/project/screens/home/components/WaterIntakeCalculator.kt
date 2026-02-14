@@ -22,7 +22,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import org.example.project.domain.model.WaterIntakeParams
 import org.example.project.domain.usecase.CalculateDailyWaterIntakeUseCase
-import org.example.project.services.rememberNotifier
+import org.example.project.rememberNotifier
 
 /**
  * State holder para o [WaterIntakeCalculator] para consolidar o estado da UI.

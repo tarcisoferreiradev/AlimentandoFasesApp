@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="splash_background">#FBF9F3</color>
+    <!--
+    Decisão Arquitetural: As cores da marca e do sistema são centralizadas
+    neste arquivo para garantir consistência e facilitar a manutenção do tema.
+    -->
+    <color name="brand_primary">#5A8E5A</color>
+    
+    <!--
+    Decisão Arquitetural: A cor de fundo da splash screen é definida para
+    corresponder à cor de fundo principal da aplicação. Isso cria uma transição
+    suave e imperceptível para o usuário na inicialização.
+    -->
+    <color name="splash_background">#e6dfca</color>
 </resources>

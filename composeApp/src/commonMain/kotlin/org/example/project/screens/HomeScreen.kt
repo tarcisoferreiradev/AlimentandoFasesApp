@@ -54,11 +54,13 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -90,10 +92,24 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.example.project.core.WaterIntakeParams
+import org.example.project.core.WaterIntakeResult
+import org.example.project.core.glassesOf250ml
+import org.example.project.core.liters
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.roundToInt
+
+// =====================================================================================
+// PLATFORM-SPECIFIC (EXPECT)
+// =====================================================================================
+
+@Composable
+expect fun isLandscape(): Boolean
+
+@Composable
+expect fun platformTestNotificationHandler(): () -> Unit
 
 // =====================================================================================
 // DATA AND DOMAIN LAYERS (MOCK)
@@ -142,11 +158,6 @@ private object AppResources {
 
 private data class Action(val date: String, val title: String, val description: String, val location: String, val imageRes: DrawableResource)
 private data class Ebook(val imageRes: DrawableResource, val contentDescription: String)
-private data class WaterIntakeParams(val weight: Int, val age: Int)
-private data class WaterIntakeResult(val amountInMl: Int)
-
-private val WaterIntakeResult.liters: Float get() = amountInMl / 1000f
-private val WaterIntakeResult.glassesOf250ml: Int get() = (amountInMl / 250f).roundToInt()
 
 private fun Float.toBrazilianDecimalFormat(): String {
     val integerPart = toInt()
@@ -174,9 +185,6 @@ private class CalculateDailyWaterIntakeUseCase {
 // =====================================================================================
 
 @Composable
-expect fun isLandscape(): Boolean
-
-@Composable
 fun HomeScreen() {
     var calculatorWeight by rememberSaveable { mutableStateOf(70) }
     var calculatorSelectedAgeIndex by rememberSaveable { mutableStateOf(1) }
@@ -194,6 +202,7 @@ fun HomeScreen() {
     }
 
     val isLandscape = isLandscape()
+    val onTestNotificationClick = platformTestNotificationHandler()
 
     if (isLandscape) {
         LandscapeHomeScreen(
@@ -202,7 +211,8 @@ fun HomeScreen() {
             result = calculatorResult,
             onWeightChange = { calculatorWeight = it },
             onAgeIndexChange = { calculatorSelectedAgeIndex = it },
-            onCalculateClick = ::onCalculate
+            onCalculateClick = ::onCalculate,
+            onTestNotificationClick = onTestNotificationClick
         )
     } else {
         PortraitHomeScreen(
@@ -211,7 +221,8 @@ fun HomeScreen() {
             result = calculatorResult,
             onWeightChange = { calculatorWeight = it },
             onAgeIndexChange = { calculatorSelectedAgeIndex = it },
-            onCalculateClick = ::onCalculate
+            onCalculateClick = ::onCalculate,
+            onTestNotificationClick = onTestNotificationClick
         )
     }
 }
@@ -224,11 +235,21 @@ private fun PortraitHomeScreen(
     result: Result<WaterIntakeResult>?,
     onWeightChange: (Int) -> Unit,
     onAgeIndexChange: (Int) -> Unit,
-    onCalculateClick: () -> Unit
+    onCalculateClick: () -> Unit,
+    onTestNotificationClick: () -> Unit
 ) {
     Scaffold(
         containerColor = Color(0xFFe6dfca),
-        contentWindowInsets = WindowInsets(0.dp)
+        contentWindowInsets = WindowInsets(0.dp),
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onTestNotificationClick,
+                containerColor = Color(0xFF5A8E5A),
+                contentColor = Color.White
+            ) {
+                Icon(Icons.Default.Notifications, contentDescription = "Testar Notificação")
+            }
+        }
     ) { contentPadding ->
         LazyColumn(
             modifier = Modifier
@@ -264,11 +285,21 @@ private fun LandscapeHomeScreen(
     result: Result<WaterIntakeResult>?,
     onWeightChange: (Int) -> Unit,
     onAgeIndexChange: (Int) -> Unit,
-    onCalculateClick: () -> Unit
+    onCalculateClick: () -> Unit,
+    onTestNotificationClick: () -> Unit
 ) {
     Scaffold(
         containerColor = Color(0xFFe6dfca),
-        contentWindowInsets = WindowInsets(0.dp)
+        contentWindowInsets = WindowInsets(0.dp),
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onTestNotificationClick,
+                containerColor = Color(0xFF5A8E5A),
+                contentColor = Color.White
+            ) {
+                Icon(Icons.Default.Notifications, contentDescription = "Testar Notificação")
+            }
+        }
     ) { contentPadding ->
         Row(
             modifier = Modifier
@@ -620,7 +651,6 @@ private fun HydrationCalculatorBlock(
     }
 }
 
-
 @Composable
 private fun InputSection(
     weight: Int,
@@ -732,7 +762,6 @@ private fun ResultSection(
     }
 }
 
-
 @Composable
 private fun WeightStepper(
     weight: Int,
@@ -823,16 +852,6 @@ private fun AgeButton(
             textAlign = TextAlign.Center
         )
     }
-}
-
-@Suppress("UNCHECKED_CAST")
-private fun <T : Any> resultSaver(): Saver<Result<T>?, Any> {
-    return Saver(
-        save = { it?.getOrNull() },
-        restore = { saved ->
-            saved?.let { Result.success(it as T) }
-        }
-    )
 }
 
 @OptIn(ExperimentalResourceApi::class)
@@ -952,4 +971,18 @@ private fun CustomFollowButton(modifier: Modifier = Modifier) {
             }
         }
     }
+}
+
+// =====================================================================================
+// SAVERS
+// =====================================================================================
+
+@Suppress("UNCHECKED_CAST")
+private fun <T : Any> resultSaver(): Saver<Result<T>?, Any> {
+    return Saver(
+        save = { it?.getOrNull() },
+        restore = { saved ->
+            saved?.let { Result.success(it as T) }
+        }
+    )
 }
