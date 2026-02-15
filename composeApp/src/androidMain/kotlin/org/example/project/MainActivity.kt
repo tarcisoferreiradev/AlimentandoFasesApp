@@ -27,11 +27,6 @@ class MainActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
         splashScreen.setKeepOnScreenCondition { !splashViewModel.isReady.value }
 
-        // [ARQUITETURA] Controle total da transição da splash screen.
-        // DECISÃO: A animação de saída padrão da splash nativa é desabilitada.
-        // Ao receber o sinal, a view da splash é removida imediatamente, sem animações
-        // concorrentes. Isso entrega o controle total e instantâneo à UI do Compose,
-        // garantindo uma transição imperceptível e eliminando o "flicker" final.
         splashScreen.setOnExitAnimationListener { splashScreenView -> splashScreenView.remove() }
 
         lifecycleScope.launch {
@@ -44,12 +39,15 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // A instanciação do NotificationService é suficiente.
-        // O canal de notificação agora é criado em seu bloco `init`.
         NotificationService(this)
+
+        // [DIRETRIZ DE ARQUITETURA] Desacopla a Window da Activity do conteúdo.
+        // Esta é a única configuração de janela necessária na Activity.
+        // Toda a estilização (cores, ícones) é delegada à camada Compose.
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
+            // O Composable 'App' agora é totalmente responsável pela UI.
             App(uiReady = uiReady)
         }
     }

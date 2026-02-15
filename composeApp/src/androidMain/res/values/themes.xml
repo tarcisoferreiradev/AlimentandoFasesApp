@@ -2,8 +2,8 @@
 <resources>
     <!--
     [ARQUITETURA] Tema da Splash Screen.
-    Ele define a aparência da janela de inicialização e aponta para o tema principal
-    que será usado após a transição.
+    Este tema é referenciado pelo AndroidManifest e é necessário para a splash nativa.
+    A estilização é mínima, pois o controle visual está no Compose.
     -->
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splash_background</item>
@@ -13,12 +13,10 @@
 
     <!--
     [ARQUITETURA] Tema Principal do App.
-    DECISÃO: A propriedade `android:windowBackground` é definida com a mesma cor da splash.
-    Isso garante que, no milissegundo de transição entre a splash nativa e a UI do Compose,
-    o fundo da janela da Activity já esteja na cor correta, eliminando o "flicker" branco
-    e garantindo uma transição imperceptível.
+    Referenciado pelo AndroidManifest. Este é o tema base após a splash.
+    Ele é intencionalmente mínimo para não conflitar com o `SystemTheme` Composable.
     -->
     <style name="Theme.App.Main" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:windowBackground">@color/splash_background</item>
+        <!-- A estilização das barras de sistema é 100% controlada via Compose (`SystemTheme.kt`). -->
     </style>
 </resources>

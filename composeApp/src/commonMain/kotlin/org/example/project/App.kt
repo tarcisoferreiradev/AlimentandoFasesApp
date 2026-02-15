@@ -27,12 +27,16 @@ import org.example.project.screens.RegistrationProfilePhotoScreen
 import org.example.project.screens.SplashScreen
 import org.example.project.screens.VerifyEmailScreen
 import org.example.project.theme.AlimentandoFasesTheme
+import org.example.project.theme.SystemTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 @Preview
 fun App(uiReady: Boolean = false) {
     AlimentandoFasesTheme {
+        // [DIRETRIZ DE ARQUITETURA] Aplica o tema de sistema. Passe 'true' para ícones PRETOS.
+        SystemTheme(isDarkIcons = true)
+
         Surface(modifier = Modifier.fillMaxSize()) {
             var currentScreen by remember { mutableStateOf<Screen>(Screen.Splash) }
 
