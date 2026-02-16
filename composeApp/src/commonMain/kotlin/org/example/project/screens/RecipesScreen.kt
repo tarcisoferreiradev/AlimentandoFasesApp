@@ -1,22 +1,39 @@
 package org.example.project.screens
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import org.example.project.screens.recipes.CategoryTabs
+import org.example.project.screens.recipes.LifeStageSection
+import org.example.project.screens.recipes.MainBanner
+import org.example.project.screens.recipes.PopularRecipesSection
+import org.example.project.screens.recipes.QuickRecipesSection
+import org.example.project.screens.recipes.SearchAndFilter
 
-/**
- * Placeholder para a tela de Receitas.
- * A implementação real será adicionada em uma etapa futura.
- */
 @Composable
-fun RecipesScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("Tela de Receitas (Em Construção)")
+fun RecipesScreen(onTitleChange: (String?) -> Unit) {
+    LaunchedEffect(Unit) {
+        onTitleChange("Receitas")
+    }
+
+    Column(modifier = Modifier.fillMaxSize().background(Color(0xFFe6dfca))) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 16.dp)
+        ) {
+            item { SearchAndFilter() }
+            item { MainBanner() }
+            item { CategoryTabs() }
+            item { PopularRecipesSection() }
+            item { LifeStageSection() }
+            item { QuickRecipesSection() }
+        }
     }
 }

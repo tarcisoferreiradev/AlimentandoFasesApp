@@ -185,7 +185,12 @@ private class CalculateDailyWaterIntakeUseCase {
 // =====================================================================================
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(onTitleChange: (String?) -> Unit) {
+    // [DIRETRIZ ARQUITETURAL] Notifica o Scaffold pai para renderizar o título apropriado para esta tela.
+    LaunchedEffect(Unit) {
+        onTitleChange("Início")
+    }
+
     var calculatorWeight by rememberSaveable { mutableStateOf(70) }
     var calculatorSelectedAgeIndex by rememberSaveable { mutableStateOf(1) }
     var calculatorResult: Result<WaterIntakeResult>? by rememberSaveable(stateSaver = resultSaver()) {
