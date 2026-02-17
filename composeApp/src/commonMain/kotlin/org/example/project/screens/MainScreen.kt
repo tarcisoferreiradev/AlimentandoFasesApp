@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.example.project.navigation.Screen
+import org.example.project.screens.recipedetail.RecipeDetailScreen
 import org.example.project.ui.theme.AppDefaults
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,9 +40,21 @@ import org.example.project.ui.theme.AppDefaults
 fun MainScreen() {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Home) }
     val screens = listOf(Screen.Home, Screen.Content, Screen.Community, Screen.Recipes, Screen.Profile)
-    val showBottomBar = currentScreen in screens
+    
+    // [STATE HOISTING] Mantém o estado da tela atual, incluindo detalhes da receita.
+    var currentRecipeId by remember { mutableStateOf<String?>(null) }
 
-    // [STATE HOISTING] Mantém o estado do título da TopAppBar.
+    // Early return para a tela de detalhes da receita, simplificando o fluxo principal.
+    val recipeId = currentRecipeId
+    if (recipeId != null) {
+        RecipeDetailScreen(
+            recipeId = recipeId,
+            onNavigateBack = { currentRecipeId = null }
+        )
+        return
+    }
+
+    val showBottomBar = currentScreen in screens
     var topBarTitle by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
@@ -54,8 +67,6 @@ fun MainScreen() {
                 CenterAlignedTopAppBar(
                     title = { Text(it) },
                     navigationIcon = {
-                        // [DIRETRIZ DE UI] O menu de navegação deve aparecer em todas as telas principais
-                        // que compartilham o Scaffold principal, garantindo consistência na navegação.
                         if (showBottomBar) {
                             IconButton(onClick = { /* TODO: Open Navigation Drawer */ }) {
                                 Icon(
@@ -128,7 +139,10 @@ fun MainScreen() {
                 is Screen.Home -> HomeScreen(onTitleChange = onTitleChange)
                 is Screen.Content -> ContentScreen(onTitleChange = onTitleChange)
                 is Screen.Community -> CommunityScreen(onTitleChange = onTitleChange)
-                is Screen.Recipes -> RecipesScreen(onTitleChange = onTitleChange)
+                is Screen.Recipes -> RecipesScreen(
+                    onTitleChange = onTitleChange,
+                    onNavigateToRecipeDetail = { id -> currentRecipeId = id }
+                )
                 is Screen.Profile -> ProfileScreen(onTitleChange = onTitleChange)
                 else -> HomeScreen(onTitleChange = onTitleChange)
             }

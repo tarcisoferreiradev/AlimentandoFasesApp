@@ -18,7 +18,10 @@ import org.example.project.screens.recipes.QuickRecipesSection
 import org.example.project.screens.recipes.SearchAndFilter
 
 @Composable
-fun RecipesScreen(onTitleChange: (String?) -> Unit) {
+fun RecipesScreen(
+    onTitleChange: (String?) -> Unit,
+    onNavigateToRecipeDetail: (String) -> Unit
+) {
     LaunchedEffect(Unit) {
         onTitleChange("Receitas")
     }
@@ -31,9 +34,9 @@ fun RecipesScreen(onTitleChange: (String?) -> Unit) {
             item { SearchAndFilter() }
             item { MainBanner() }
             item { CategoryTabs() }
-            item { PopularRecipesSection() }
+            item { PopularRecipesSection(onRecipeClick = onNavigateToRecipeDetail) }
             item { LifeStageSection() }
-            item { QuickRecipesSection() }
+            item { QuickRecipesSection(onRecipeClick = onNavigateToRecipeDetail) }
         }
     }
 }

@@ -5,6 +5,7 @@ import alimentandofasesapp.composeapp.generated.resources.bolinho
 import alimentandofasesapp.composeapp.generated.resources.panquequinha
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,9 +56,10 @@ import org.jetbrains.compose.resources.painterResource
  */
 @OptIn(ExperimentalResourceApi::class)
 @Composable
-fun PopularRecipesSection() {
+fun PopularRecipesSection(onRecipeClick: (String) -> Unit) {
     val recipes = listOf(
         Recipe(
+            id = "1",
             name = "Bolinho Vegano de Banana e Aveia",
             rating = 4.9f,
             timeInMinutes = 25,
@@ -65,6 +67,7 @@ fun PopularRecipesSection() {
             tags = listOf("Sem Glúten", "Vegano")
         ),
         Recipe(
+            id = "2",
             name = "Panqueca de banana e aveia",
             rating = 4.7f,
             timeInMinutes = 10,
@@ -83,7 +86,7 @@ fun PopularRecipesSection() {
             modifier = Modifier.height(IntrinsicSize.Max)
         ) {
             recipes.forEach { recipe ->
-                RecipeCard(recipe, modifier = Modifier.weight(1f).fillMaxHeight())
+                RecipeCard(recipe, modifier = Modifier.weight(1f).fillMaxHeight(), onClick = { onRecipeClick(recipe.id) })
             }
         }
     }
@@ -194,11 +197,12 @@ private fun LifeStageCard(category: LifeStageCategory) {
  */
 @OptIn(ExperimentalResourceApi::class)
 @Composable
-fun QuickRecipesSection() {
+fun QuickRecipesSection(onRecipeClick: (String) -> Unit) {
     // Para fins de layout, usamos os mesmos dados. Em produção,
     // esta lista seria filtrada (ex: timeInMinutes <= 20).
     val recipes = listOf(
         Recipe(
+            id = "2",
             name = "Panqueca de banana e aveia",
             rating = 4.7f,
             timeInMinutes = 10,
@@ -206,6 +210,7 @@ fun QuickRecipesSection() {
             tags = listOf("Sem Glúten")
         ),
         Recipe(
+            id = "1",
             name = "Bolinho Vegano de Banana e Aveia",
             rating = 4.9f,
             timeInMinutes = 25,
@@ -227,7 +232,7 @@ fun QuickRecipesSection() {
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             recipes.forEach { recipe ->
-                RecipeCard(recipe, modifier = Modifier.weight(1f).fillMaxHeight())
+                RecipeCard(recipe, modifier = Modifier.weight(1f).fillMaxHeight(), onClick = { onRecipeClick(recipe.id) })
             }
         }
     }
@@ -243,9 +248,9 @@ fun QuickRecipesSection() {
  */
 @OptIn(ExperimentalResourceApi::class)
 @Composable
-fun RecipeCard(recipe: Recipe, modifier: Modifier = Modifier) {
+fun RecipeCard(recipe: Recipe, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
@@ -335,6 +340,7 @@ private fun RecipeTags(tags: List<String>, modifier: Modifier = Modifier) {
  * [Recipe] define a estrutura de dados para uma receita.
  */
 data class Recipe(
+    val id: String,
     val name: String,
     val rating: Float,
     val timeInMinutes: Int,
