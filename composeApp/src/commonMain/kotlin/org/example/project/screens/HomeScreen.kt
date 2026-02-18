@@ -727,22 +727,31 @@ private fun ResultSection(
 
         Spacer(Modifier.height(16.dp))
 
-        val resultText = animatedLiters.toBrazilianDecimalFormat()
-
-        Row(verticalAlignment = Alignment.Bottom) {
+        if (result == null) {
             Text(
-                resultText,
+                "—",
                 style = MaterialTheme.typography.displayLarge,
                 fontWeight = FontWeight.Bold,
                 color = primaryColor
             )
-            Text(
-                " Litros",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Normal,
-                color = primaryColor,
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
+        } else {
+            val resultText = animatedLiters.toBrazilianDecimalFormat()
+
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    resultText,
+                    style = MaterialTheme.typography.displayLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = primaryColor
+                )
+                Text(
+                    " Litros",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Normal,
+                    color = primaryColor,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+            }
         }
 
         Spacer(Modifier.height(16.dp))
