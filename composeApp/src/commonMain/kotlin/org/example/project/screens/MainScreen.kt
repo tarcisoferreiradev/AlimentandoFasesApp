@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.example.project.navigation.Screen
+import org.example.project.screens.contenthub.ContentHubScreen
 import org.example.project.screens.recipedetail.RecipeDetailScreen
 import org.example.project.ui.theme.AppDefaults
 
@@ -143,7 +144,7 @@ fun MainScreen() {
             val onTitleChange: (String?) -> Unit = { newTitle -> topBarTitle = newTitle }
             when (currentScreen) {
                 is Screen.Home -> HomeScreen(onTitleChange = onTitleChange)
-                is Screen.Content -> ContentScreen(onTitleChange = onTitleChange)
+                is Screen.Content -> ContentHubScreen(onTitleChange = onTitleChange)
                 is Screen.Community -> CommunityScreen(onTitleChange = onTitleChange)
                 is Screen.Recipes -> RecipesScreen(
                     onTitleChange = onTitleChange,
