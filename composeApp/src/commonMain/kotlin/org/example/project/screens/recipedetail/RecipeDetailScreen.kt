@@ -148,7 +148,7 @@ fun RecipeDetailScreen(recipeId: String, onNavigateBack: () -> Unit) {
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize()) {
             Image(
-                painter = painterResource(recipe.imageRes),
+                painter = painterResource( recipe.imageRes),
                 contentDescription = recipe.name,
                 modifier = Modifier.fillMaxWidth().height(imageHeight),
                 contentScale = ContentScale.Crop

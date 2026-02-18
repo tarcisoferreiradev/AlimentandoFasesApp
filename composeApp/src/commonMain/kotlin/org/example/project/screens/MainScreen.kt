@@ -41,10 +41,8 @@ fun MainScreen() {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Home) }
     val screens = listOf(Screen.Home, Screen.Content, Screen.Community, Screen.Recipes, Screen.Profile)
     
-    // [STATE HOISTING] Mantém o estado da tela atual, incluindo detalhes da receita.
     var currentRecipeId by remember { mutableStateOf<String?>(null) }
 
-    // Early return para a tela de detalhes da receita, simplificando o fluxo principal.
     val recipeId = currentRecipeId
     if (recipeId != null) {
         RecipeDetailScreen(
@@ -65,7 +63,10 @@ fun MainScreen() {
                     scrolledContainerColor = AppDefaults.BegeNavegacao
                 )
                 CenterAlignedTopAppBar(
-                    title = { Text(it) },
+                    // [UI REFINEMENT] O título foi removido para uma UI mais limpa. A barra
+                    // (com seus ícones) continua a ser exibida, mas o conteúdo de texto
+                    // do título foi esvaziado, desacoplando a estrutura da barra de seu conteúdo.
+                    title = { },
                     navigationIcon = {
                         if (showBottomBar) {
                             IconButton(onClick = { /* TODO: Open Navigation Drawer */ }) {
@@ -121,10 +122,15 @@ fun MainScreen() {
                                     contentDescription = screen.label
                                 )
                             },
+                            // [ACCESSIBILITY REFINEMENT]
+                            // A cor do texto e dos ícones foi definida como Color.Black sólido para
+                            // garantir alto contraste e máxima legibilidade, alinhando-se às
+                            // diretrizes de acessibilidade (WCAG).
                             colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = Color.Black.copy(alpha = 0.7f),
-                                unselectedIconColor = Color.Black.copy(alpha = 0.7f),
-                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                selectedIconColor = Color.Black,
+                                unselectedIconColor = Color.Black,
+                                selectedTextColor = Color.Black,
+                                unselectedTextColor = Color.Black,
                                 indicatorColor = Color.Transparent
                             )
                         )
@@ -144,6 +150,10 @@ fun MainScreen() {
                     onNavigateToRecipeDetail = { id -> currentRecipeId = id }
                 )
                 is Screen.Profile -> ProfileScreen(onTitleChange = onTitleChange)
+                // [ARCHITECTURAL REFINEMENT]
+                // Adicionado um `else` para tornar o `when` exaustivo. Isso garante que qualquer
+                // estado de tela não mapeado seja tratado de forma resiliente, revertendo para
+                // a HomeScreen como um fallback seguro e prevenindo crashes ou telas em branco.
                 else -> HomeScreen(onTitleChange = onTitleChange)
             }
         }

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -19,8 +18,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BookmarkBorder
@@ -36,7 +33,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -76,14 +72,14 @@ fun PopularRecipesSection(onRecipeClick: (String) -> Unit) {
         )
     )
 
-    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-        // [REFINAMENTO DE LAYOUT] Adicionado espaço extra acima do título.
-        Spacer(Modifier.height(24.dp))
-        Text("Popular", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+    Column {
+        // [UI REFINEMENT] O espaçamento foi aumentado para 32.dp para maior respiro visual.
+        Spacer(Modifier.height(32.dp))
+        Text("Popular", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black), modifier = Modifier.padding(horizontal = 16.dp))
         Spacer(Modifier.height(16.dp))
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.height(IntrinsicSize.Max)
+            modifier = Modifier.height(IntrinsicSize.Max).padding(horizontal = 16.dp)
         ) {
             recipes.forEach { recipe ->
                 RecipeCard(recipe, modifier = Modifier.weight(1f).fillMaxHeight(), onClick = { onRecipeClick(recipe.id) })
@@ -115,8 +111,6 @@ data class LifeStageCategory(
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun LifeStageSection() {
-    // [NOTA TÉCNICA] Usando um recurso existente como placeholder para evitar falha de build.
-    // Substituir por 'Res.drawable.placeholder_1', etc., quando os recursos forem adicionados.
     val categories = listOf(
         LifeStageCategory("Introdução Alimentar", Res.drawable.bolinho, "baby_food"),
         LifeStageCategory("Crescimento Infantil", Res.drawable.panquequinha, "kids_growth"),
@@ -124,19 +118,20 @@ fun LifeStageSection() {
     )
 
     Column {
-        Spacer(Modifier.height(24.dp))
+        // [UI REFINEMENT] O espaçamento foi aumentado para 32.dp para maior respiro visual.
+        Spacer(Modifier.height(32.dp))
         Text(
-            "Para cada Fase",
+            "Dicas Nutricionais",
             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black),
             modifier = Modifier.padding(horizontal = 16.dp)
         )
         Spacer(Modifier.height(16.dp))
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(categories) { category ->
-                LifeStageCard(category)
+            categories.forEach { category ->
+                LifeStageCard(category, modifier = Modifier.weight(1f))
             }
         }
     }
@@ -148,9 +143,9 @@ fun LifeStageSection() {
  */
 @OptIn(ExperimentalResourceApi::class)
 @Composable
-private fun LifeStageCard(category: LifeStageCategory) {
+private fun LifeStageCard(category: LifeStageCategory, modifier: Modifier = Modifier) {
     Card(
-        modifier = Modifier.size(width = 160.dp, height = 200.dp),
+        modifier = modifier.height(200.dp),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -220,15 +215,18 @@ fun QuickRecipesSection(onRecipeClick: (String) -> Unit) {
     )
 
     Column {
-        Spacer(Modifier.height(24.dp))
+        // [UI REFINEMENT] O espaçamento foi aumentado para 32.dp para maior respiro visual.
+        Spacer(Modifier.height(32.dp))
         Text(
             "Receitas Rápidas",
             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black),
             modifier = Modifier.padding(horizontal = 16.dp)
         )
         Spacer(Modifier.height(16.dp))
+        // [LAYOUT FIX] Adicionado `height(IntrinsicSize.Max)` para garantir que os cards
+        // tenham a mesma altura, mantendo a consistência visual com a seção "Popular".
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier.padding(horizontal = 16.dp).height(IntrinsicSize.Max),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             recipes.forEach { recipe ->
