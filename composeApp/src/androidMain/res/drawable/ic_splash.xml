@@ -12,6 +12,6 @@ a diferentes densidades de tela.
     <item
         android:width="220dp"
         android:height="220dp"
-        android:drawable="@drawable/logo_app1"
+        android:drawable="@drawable/alimentandofasesicon"
         android:gravity="center" />
 </layer-list>
