@@ -339,25 +339,35 @@ private fun LandscapeHomeScreen(
 }
 
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalResourceApi::class)
 @Composable
 private fun CarouselSection(items: List<DrawableResource>) {
-    val pageCount = Int.MAX_VALUE
-    val startingPoint = pageCount / 2
-    val initialPage = startingPoint - (startingPoint % items.size)
-    val pagerState = rememberPagerState(initialPage = initialPage) { pageCount }
+    // Early Return: Garante que o componente não tente renderizar um carrossel vazio, prevenindo IndexOutOfBoundsException.
+    if (items.isEmpty()) {
+        return
+    }
+
+    val pagerState = rememberPagerState { items.size }
     val scope = rememberCoroutineScope()
     val navigationButtonBackgroundColor = Color.Black.copy(alpha = 0.2f)
 
+    // [ARQUITETURA DE PERFORMANCE] LaunchedEffect com a key `Unit` garante que esta
+    // corrotina execute apenas UMA VEZ, quando o Composable entra na composição.
+    // Isso quebra o ciclo de cancelamento/relançamento que causava o ANR.
     LaunchedEffect(Unit) {
+        // Loop infinito seguro dentro de uma corrotina para o avanço automático.
         while (true) {
-            delay(4000)
-            scope.launch {
-                pagerState.animateScrollToPage(
-                    page = pagerState.currentPage + 1,
-                    animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing)
-                )
-            }
+            // Atraso para a exibição da imagem atual.
+            delay(3000L)
+
+            // Cálculo da próxima página de forma cíclica e segura.
+            val nextPage = (pagerState.currentPage + 1) % items.size
+
+            // Inicia a animação para a próxima página.
+            pagerState.animateScrollToPage(
+                page = nextPage,
+                animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing)
+            )
         }
     }
 
@@ -365,8 +375,11 @@ private fun CarouselSection(items: List<DrawableResource>) {
         modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
         contentAlignment = Alignment.Center
     ) {
-        HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
-            CarouselCard(imageRes = items[page % items.size])
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+            CarouselCard(imageRes = items[page])
         }
 
         Row(
@@ -377,8 +390,9 @@ private fun CarouselSection(items: List<DrawableResource>) {
             IconButton(
                 onClick = {
                     scope.launch {
+                        val prevPage = (pagerState.currentPage - 1 + items.size) % items.size
                         pagerState.animateScrollToPage(
-                            page = pagerState.currentPage - 1,
+                            page = prevPage,
                             animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing)
                         )
                     }
@@ -390,8 +404,9 @@ private fun CarouselSection(items: List<DrawableResource>) {
             IconButton(
                 onClick = {
                     scope.launch {
+                        val nextPage = (pagerState.currentPage + 1) % items.size
                         pagerState.animateScrollToPage(
-                            page = pagerState.currentPage + 1,
+                            page = nextPage,
                             animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing)
                         )
                     }
@@ -407,7 +422,7 @@ private fun CarouselSection(items: List<DrawableResource>) {
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items.indices.forEach { index ->
-                val color = if ((pagerState.currentPage % items.size) == index) Color.White else Color.Gray.copy(alpha = 0.5f)
+                val color = if (pagerState.currentPage == index) Color.White else Color.Gray.copy(alpha = 0.5f)
                 Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(color))
             }
         }
