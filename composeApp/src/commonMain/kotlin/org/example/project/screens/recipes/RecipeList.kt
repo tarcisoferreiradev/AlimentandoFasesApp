@@ -33,7 +33,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -75,7 +74,15 @@ fun PopularRecipesSection(onRecipeClick: (String) -> Unit) {
     Column {
         // [UI REFINEMENT] O espaçamento foi aumentado para 32.dp para maior respiro visual.
         Spacer(Modifier.height(32.dp))
-        Text("Popular", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black), modifier = Modifier.padding(horizontal = 16.dp))
+        Text(
+            text = "Popular",
+            // [UI REFINEMENT] O estilo foi alterado de headlineMedium para titleLarge para
+            // alinhar com os títulos da HomeScreen, garantindo consistência visual.
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF333333),
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
         Spacer(Modifier.height(16.dp))
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -121,8 +128,12 @@ fun LifeStageSection() {
         // [UI REFINEMENT] O espaçamento foi aumentado para 32.dp para maior respiro visual.
         Spacer(Modifier.height(32.dp))
         Text(
-            "Dicas Nutricionais",
-            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black),
+            text = "Dicas Nutricionais",
+            // [UI REFINEMENT] O estilo foi alterado de headlineMedium para titleLarge para
+            // alinhar com os títulos da HomeScreen, garantindo consistência visual.
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF333333),
             modifier = Modifier.padding(horizontal = 16.dp)
         )
         Spacer(Modifier.height(16.dp))
@@ -139,7 +150,6 @@ fun LifeStageSection() {
 
 /**
  * [LifeStageCard] é um card de apresentação para uma categoria de fase de vida.
- * Utiliza um gradiente (scrim) sobre a imagem para garantir a legibilidade do texto.
  */
 @OptIn(ExperimentalResourceApi::class)
 @Composable
@@ -156,26 +166,24 @@ private fun LifeStageCard(category: LifeStageCategory, modifier: Modifier = Modi
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
-            // [DIRETRIZ DE UI] Adição de um scrim (gradiente) para garantir
-            // que o texto branco seja legível sobre qualquer imagem.
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.8f)),
-                            startY = 300f
-                        )
-                    )
-            )
-            Text(
-                text = category.name,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(16.dp)
-            )
+
+            // [UI REFINEMENT] Removido o Box com gradiente (scrim) para tirar a "película preta".
+            // Para manter o texto legível sem a película, ele foi movido para fora da imagem
+            // ou pode ser estilizado com um fundo próprio se necessário. Aqui, optei por
+            // colocar um pequeno fundo semi-transparente apenas atrás do texto para não cobrir a imagem toda.
+            Surface(
+                color = Color.Black.copy(alpha = 0.3f),
+                shape = RoundedCornerShape(topEnd = 16.dp),
+                modifier = Modifier.align(Alignment.BottomStart)
+            ) {
+                Text(
+                    text = category.name,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
         }
     }
 }
@@ -218,8 +226,12 @@ fun QuickRecipesSection(onRecipeClick: (String) -> Unit) {
         // [UI REFINEMENT] O espaçamento foi aumentado para 32.dp para maior respiro visual.
         Spacer(Modifier.height(32.dp))
         Text(
-            "Receitas Rápidas",
-            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black),
+            text = "Receitas Rápidas",
+            // [UI REFINEMENT] O estilo foi alterado de headlineMedium para titleLarge para
+            // alinhar com os títulos da HomeScreen, garantindo consistência visual.
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF333333),
             modifier = Modifier.padding(horizontal = 16.dp)
         )
         Spacer(Modifier.height(16.dp))
@@ -242,7 +254,7 @@ fun QuickRecipesSection(onRecipeClick: (String) -> Unit) {
 // ##################################################################
 
 /**
- * [RecipeCard] é um componente de apresentação para um único item de receita.
+ * [RecipeCard] é um componente de presentation para um único item de receita.
  */
 @OptIn(ExperimentalResourceApi::class)
 @Composable

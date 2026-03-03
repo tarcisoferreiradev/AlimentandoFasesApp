@@ -16,47 +16,46 @@ class AlimentandoFasesApplication : Application() {
     }
 
     private fun scheduleDailyReminder() {
-        // Decisão Arquitetural: Agendar um trabalho periódico único.
-        // A política `KEEP` garante que, se o trabalho já estiver agendado,
-        // nenhuma nova instância será criada. Isso previne agendamentos duplicados
-        // toda vez que o app é iniciado.
+        // [CORREÇÃO] Agendar um trabalho periódico para o lembrete de hidratação.
         val reminderRequest = PeriodicWorkRequestBuilder<DailyReminderWorker>(
             repeatInterval = 24, // Repetir a cada 24 horas
             repeatIntervalTimeUnit = TimeUnit.HOURS
         )
-        // Decisão Arquitetural de Compatibilidade: Revertendo para a API legada de setInitialDelay
-        // que aceita um Long e uma TimeUnit. Esta abordagem é necessária para garantir
-        // a compatibilidade com a minSdk do projeto (API 24), evitando crashes
-        // em dispositivos com Android 7 (Nougat).
-        .setInitialDelay(calculateDelayUntil8AM(), TimeUnit.MILLISECONDS) // Define o atraso para a primeira execução
+        // Define o atraso inicial para que a primeira execução ocorra exatamente às 8:00 AM.
+        .setInitialDelay(calculateDelayUntil8AM(), TimeUnit.MILLISECONDS)
         .build()
 
+        // [CORREÇÃO ARQUITETURAL] Alterado de KEEP para UPDATE.
+        // A política `KEEP` impedia que o agendamento fosse corrigido se o Worker já estivesse 
+        // registrado no sistema (provavelmente agendado para o horário em que o app foi 
+        // aberto pela primeira vez). O `UPDATE` força a atualização do agendamento com 
+        // o novo cálculo de horário (8:00 AM) toda vez que o app for atualizado ou reiniciado.
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "daily_hydration_reminder", // Um nome único para este trabalho
-            ExistingPeriodicWorkPolicy.KEEP, // Política para não duplicar
+            "daily_hydration_reminder",
+            ExistingPeriodicWorkPolicy.UPDATE, 
             reminderRequest
         )
     }
 
     /**
      * Calcula o tempo em milissegundos desde agora até as 8:00 da manhã.
-     * Esta é a regra de negócio crítica para garantir que a primeira notificação
-     * ocorra no horário correto.
+     * Garante que a notificação ocorra no período matinal.
      *
      * @return O atraso em milissegundos.
      */
     private fun calculateDelayUntil8AM(): Long {
-        val calendar = Calendar.getInstance().apply {
-            timeInMillis = System.currentTimeMillis()
+        val now = Calendar.getInstance()
+        val target = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 8)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
 
-            // Se o horário de 8:00 de hoje já passou, agenda para amanhã.
-            if (before(Calendar.getInstance())) {
+            // Se o horário de 8:00 de hoje já passou, agenda para as 8:00 de amanhã.
+            if (before(now)) {
                 add(Calendar.DATE, 1)
             }
         }
-        return calendar.timeInMillis - System.currentTimeMillis()
+        return target.timeInMillis - now.timeInMillis
     }
 }

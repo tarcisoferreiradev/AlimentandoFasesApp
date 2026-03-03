@@ -1,51 +1,36 @@
-# --- IDE & JetBrains ---
-.idea/
-*.iml
-.kotlin/
+# --- Android & Kotlin Multiplatform ---
+# Ignora artefatos de compilação do Gradle
 .gradle/
-local.properties
-.DS_Store
-captures/
+build/
+/*/build/
+bin/
 
-# --- Build Outputs (Android/KMP/Compose) ---
-**/build/
-!src/**/build/
-.externalNativeBuild/
-.cxx/
-generated/
+# --- Artefatos de Distribuição (Segurança Crítica) ---
+# Impede que o APK e metadados de release entrem no histórico de código
+**/build/outputs/apk/
+**/build/outputs/bundle/
+output-metadata.json
+release/
 
-# --- iOS Specifics (Xcode) ---
-*.xcodeproj/*
-!*.xcodeproj/project.pbxproj
-!*.xcodeproj/xcshareddata/
-!*.xcodeproj/project.xcworkspace/
-!*.xcworkspace/contents.xcworkspacedata
-**/xcshareddata/WorkspaceSettings.xcsettings
-xcuserdata/
-DerivedData/
-
-# --- Web & Cross-Platform (React/Next.js/Wasm) ---
-node_modules/
-.next/
-out/
-dist/
-*.wasm
-*.map
-
-# --- Security & Credentials (Missão Crítica) ---
-# Jamais subir chaves de produção ou variáveis de ambiente
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# --- Credenciais e Assinaturas (Missão Crítica) ---
+# Jamais suba sua chave (.jks) ou arquivos de senha para o GitHub
 *.jks
 *.keystore
-security/keys/
+*.pk8
+*.p12
+key.properties
 
-# --- Logs & Temp ---
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.turbo/
+# --- IDE - IntelliJ / Android Studio ---
+.idea/
+*.iml
+*.iws
+.project
+.settings/
+.classpath
+
+# --- Sistema Operacional ---
+Thumbs.db
+.DS_Store
+
+# --- Local Properties (Contém o caminho do SDK local) ---
+local.properties

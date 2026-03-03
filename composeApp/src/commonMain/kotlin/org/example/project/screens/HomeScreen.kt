@@ -54,13 +54,11 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -96,6 +94,7 @@ import org.example.project.core.WaterIntakeParams
 import org.example.project.core.WaterIntakeResult
 import org.example.project.core.glassesOf250ml
 import org.example.project.core.liters
+import org.example.project.core.toImmutableList
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
@@ -123,16 +122,17 @@ private object AppResources {
         Res.drawable.receitas,
         Res.drawable.comunidade,
         Res.drawable.jogo
-    )
+    ).toImmutableList()
 
     val ebooks = listOf(
-        Ebook(imageRes = Res.drawable.ebook_lanches, contentDescription = "Capa do e-book Guia de Lanches Saudáveis"),
-        Ebook(imageRes = Res.drawable.ebook_terceira_idade, contentDescription = "Capa do e-book Nutrição na Terceira Idade"),
-        Ebook(imageRes = Res.drawable.ebook_infantil, contentDescription = "Capa do e-book Criança Bem Nutrida, Futuro Saudável")
-    )
+        Ebook(id = "1", imageRes = Res.drawable.ebook_lanches, contentDescription = "Capa do e-book Guia de Lanches Saudáveis"),
+        Ebook(id = "2", imageRes = Res.drawable.ebook_terceira_idade, contentDescription = "Capa do e-book Nutrição na Terceira Idade"),
+        Ebook(id = "3", imageRes = Res.drawable.ebook_infantil, contentDescription = "Capa do e-book Criança Bem Nutrida, Futuro Saudável")
+    ).toImmutableList()
 
     val actions = listOf(
         Action(
+            id = "1",
             date = "25 DEZ",
             imageRes = Res.drawable.acao_crianca,
             title = "Ação das crianças",
@@ -140,6 +140,7 @@ private object AppResources {
             location = "Escola Municipal Sociólogo Gilberto Freyre"
         ),
         Action(
+            id = "2",
             date = "15 JAN",
             imageRes = Res.drawable.acao_adulto,
             title = "Ação dos Adultos",
@@ -147,17 +148,18 @@ private object AppResources {
             location = "CDC"
         ),
         Action(
+            id = "3",
             date = "08 MAR",
             imageRes = Res.drawable.acao_idoso,
             title = "Ação dos idosos",
             description = "Um bate-papo com especialistas sobre Sarcopenia, Hidratação e a importância das Proteínas na Terceira Idade.",
             location = "Parque Santana"
         )
-    )
+    ).toImmutableList()
 }
 
-private data class Action(val date: String, val title: String, val description: String, val location: String, val imageRes: DrawableResource)
-private data class Ebook(val imageRes: DrawableResource, val contentDescription: String)
+private data class Action(val id: String, val date: String, val title: String, val description: String, val location: String, val imageRes: DrawableResource)
+private data class Ebook(val id: String, val imageRes: DrawableResource, val contentDescription: String)
 
 private fun Float.toBrazilianDecimalFormat(): String {
     val integerPart = toInt()
@@ -207,7 +209,6 @@ fun HomeScreen(onTitleChange: (String?) -> Unit) {
     }
 
     val isLandscape = isLandscape()
-    val onTestNotificationClick = platformTestNotificationHandler()
 
     if (isLandscape) {
         LandscapeHomeScreen(
@@ -216,8 +217,7 @@ fun HomeScreen(onTitleChange: (String?) -> Unit) {
             result = calculatorResult,
             onWeightChange = { calculatorWeight = it },
             onAgeIndexChange = { calculatorSelectedAgeIndex = it },
-            onCalculateClick = ::onCalculate,
-            onTestNotificationClick = onTestNotificationClick
+            onCalculateClick = ::onCalculate
         )
     } else {
         PortraitHomeScreen(
@@ -226,8 +226,7 @@ fun HomeScreen(onTitleChange: (String?) -> Unit) {
             result = calculatorResult,
             onWeightChange = { calculatorWeight = it },
             onAgeIndexChange = { calculatorSelectedAgeIndex = it },
-            onCalculateClick = ::onCalculate,
-            onTestNotificationClick = onTestNotificationClick
+            onCalculateClick = ::onCalculate
         )
     }
 }
@@ -240,21 +239,11 @@ private fun PortraitHomeScreen(
     result: Result<WaterIntakeResult>?,
     onWeightChange: (Int) -> Unit,
     onAgeIndexChange: (Int) -> Unit,
-    onCalculateClick: () -> Unit,
-    onTestNotificationClick: () -> Unit
+    onCalculateClick: () -> Unit
 ) {
     Scaffold(
         containerColor = Color(0xFFe6dfca),
-        contentWindowInsets = WindowInsets(0.dp),
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onTestNotificationClick,
-                containerColor = Color(0xFF5A8E5A),
-                contentColor = Color.White
-            ) {
-                Icon(Icons.Default.Notifications, contentDescription = "Testar Notificação")
-            }
-        }
+        contentWindowInsets = WindowInsets(0.dp)
     ) { contentPadding ->
         LazyColumn(
             modifier = Modifier
@@ -263,10 +252,10 @@ private fun PortraitHomeScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(bottom = 96.dp)
         ) {
-            item { CarouselSection(items = AppResources.carouselItems) }
-            item { EbooksSection(ebooks = AppResources.ebooks) }
-            item { ActionsSection(actions = AppResources.actions) }
-            item {
+            item(key = "carousel", contentType = "carousel") { CarouselSection(items = AppResources.carouselItems.items) }
+            item(key = "ebooks", contentType = "ebooks") { EbooksSection(ebooks = AppResources.ebooks.items) }
+            item(key = "actions", contentType = "actions") { ActionsSection(actions = AppResources.actions.items) }
+            item(key = "calculator", contentType = "calculator") {
                 HydrationCalculatorBlock(
                     modifier = Modifier.padding(vertical = 24.dp),
                     weight = weight,
@@ -277,7 +266,7 @@ private fun PortraitHomeScreen(
                     onCalculateClick = onCalculateClick
                 )
             }
-            item { ContactCtaSection() }
+            item(key = "contact", contentType = "contact") { ContactCtaSection() }
         }
     }
 }
@@ -290,21 +279,11 @@ private fun LandscapeHomeScreen(
     result: Result<WaterIntakeResult>?,
     onWeightChange: (Int) -> Unit,
     onAgeIndexChange: (Int) -> Unit,
-    onCalculateClick: () -> Unit,
-    onTestNotificationClick: () -> Unit
+    onCalculateClick: () -> Unit
 ) {
     Scaffold(
         containerColor = Color(0xFFe6dfca),
-        contentWindowInsets = WindowInsets(0.dp),
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onTestNotificationClick,
-                containerColor = Color(0xFF5A8E5A),
-                contentColor = Color.White
-            ) {
-                Icon(Icons.Default.Notifications, contentDescription = "Testar Notificação")
-            }
-        }
+        contentWindowInsets = WindowInsets(0.dp)
     ) { contentPadding ->
         Row(
             modifier = Modifier
@@ -312,7 +291,7 @@ private fun LandscapeHomeScreen(
                 .padding(contentPadding)
         ) {
             Box(modifier = Modifier.fillMaxHeight().weight(1f)) {
-                CarouselSection(items = AppResources.carouselItems)
+                CarouselSection(items = AppResources.carouselItems.items)
             }
             LazyColumn(
                 modifier = Modifier.fillMaxHeight().weight(1f).padding(horizontal = 24.dp),
@@ -320,9 +299,9 @@ private fun LandscapeHomeScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                item { EbooksSection(ebooks = AppResources.ebooks) }
-                item { ActionsSection(actions = AppResources.actions) }
-                item {
+                item(key = "ebooks", contentType = "ebooks") { EbooksSection(ebooks = AppResources.ebooks.items) }
+                item(key = "actions", contentType = "actions") { ActionsSection(actions = AppResources.actions.items) }
+                item(key = "calculator", contentType = "calculator") {
                     HydrationCalculatorBlock(
                         weight = weight,
                         selectedAgeIndex = selectedAgeIndex,
@@ -332,7 +311,7 @@ private fun LandscapeHomeScreen(
                         onCalculateClick = onCalculateClick
                     )
                 }
-                item { ContactCtaSection() }
+                item(key = "contact", contentType = "contact") { ContactCtaSection() }
             }
         }
     }
@@ -436,7 +415,11 @@ private fun CarouselCard(imageRes: DrawableResource, modifier: Modifier = Modifi
         painter = painterResource(imageRes),
         contentDescription = null,
         contentScale = ContentScale.Crop,
-        modifier = modifier.fillMaxSize()
+        // [RENDERIZAÇÃO VIA GPU] Decisão Arquitetural: O uso de .graphicsLayer delega o 
+        // desenho e clipping deste componente diretamente para a GPU. Isso libera a 
+        // Main Thread de cálculos de renderização pesados durante animações, resultando 
+        // em transições mais fluidas.
+        modifier = modifier.fillMaxSize().graphicsLayer { clip = true }
     )
 }
 
@@ -452,7 +435,12 @@ private fun EbooksSection(ebooks: List<Ebook>) {
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            items(ebooks) { ebook ->
+            // [OTIMIZAÇÃO DE LAZYROW] Uso de key e contentType para reciclagem eficiente.
+            items(
+                items = ebooks,
+                key = { it.id },
+                contentType = { "ebook_card" }
+            ) { ebook ->
                 EbookCard(ebook = ebook, onDownloadClick = { /*TODO*/ })
             }
         }
@@ -513,7 +501,12 @@ private fun ActionsSection(actions: List<Action>) {
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(actions) { action ->
+            // [OTIMIZAÇÃO DE LAZYROW] Uso de key e contentType para reciclagem eficiente.
+            items(
+                items = actions,
+                key = { it.id },
+                contentType = { "action_card" }
+            ) { action ->
                 ActionCard(action = action)
             }
         }
@@ -601,6 +594,7 @@ private fun ActionCard(action: Action, modifier: Modifier = Modifier) {
                         border = BorderStroke(1.dp, Color(0xFF5A8E5A)),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         interactionSource = interactionSource,
+                        // [RENDERIZAÇÃO VIA GPU] Uso de graphicsLayer para animação de escala eficiente.
                         modifier = Modifier.graphicsLayer {
                             scaleX = scale
                             scaleY = scale

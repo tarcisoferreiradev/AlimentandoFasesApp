@@ -39,6 +39,33 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 
+@Composable
+fun ContentHubScreen(onTitleChange: (String?) -> Unit) {
+    LaunchedEffect(Unit) {
+        onTitleChange("Conteúdo")
+    }
+
+    // [UI REFINEMENT] Placeholder "Em Breve"
+    // Seguindo o estilo das telas de Comunidade e Perfil, esta tela exibe um fundo cinza
+    // e uma mensagem centralizada enquanto o conteúdo real está em desenvolvimento.
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF2F2F2)), // Cinza claro sólido
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Em breve",
+            style = MaterialTheme.typography.headlineMedium.copy(
+                fontWeight = FontWeight.Bold,
+                color = Color.Gray
+            )
+        )
+    }
+}
+
+// O código abaixo é mantido para referência futura quando a tela for implementada de fato.
+
 private data class BentoItem(
     val title: String,
     val subtitle: String? = null,
@@ -60,28 +87,6 @@ private val fundamentalGuides = listOf(
     FundamentalGuideItem("Açúcar antes dos 2 Anos"),
     FundamentalGuideItem("O Papel do Ferro no Desenvolvimento")
 )
-
-@Composable
-fun ContentHubScreen(onTitleChange: (String?) -> Unit) {
-    LaunchedEffect(Unit) {
-        onTitleChange("Conteúdo")
-    }
-
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFe6dfca))
-            .padding(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        item {
-            BentoGridStaticLayout()
-        }
-        item {
-            FundamentalGuideSection(guides = fundamentalGuides)
-        }
-    }
-}
 
 @Composable
 private fun BentoGridStaticLayout() {

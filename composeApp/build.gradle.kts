@@ -24,6 +24,9 @@ kotlin {
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
+            // [ARQUITETURA DE PERFORMANCE] O uso de framework estático (isStatic = true)
+            // reduz o overhead de linkagem dinâmica durante o cold start no iOS, 
+            // resultando em um tempo de boot inicial menor e melhor performance percebida.
             isStatic = true
         }
     }
@@ -36,6 +39,9 @@ kotlin {
                 implementation(compose.runtime)
                 implementation(compose.foundation)
                 implementation(compose.material3)
+                // [OTIMIZAÇÃO DE BUNDLE] TODO: Substituir materialIconsExtended por ícones vetoriais
+                // locais (.xml/.svg) ou importações específicas em futuras sprints para 
+                // reduzir o tamanho do binário final (estimativa de economia: ~40MB).
                 implementation(compose.materialIconsExtended)
                 implementation(compose.ui)
                 implementation(compose.components.resources)
@@ -84,12 +90,27 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            // [LIMPEZA DE METADADOS] Remove arquivos redundantes para reduzir o tamanho final do artefato.
+            excludes += "**/kotlin/**"
+            excludes += "**/*.kotlin_module"
+            excludes += "**/META-INF/*.kotlin_module"
+            excludes += "**/META-INF/*.version"
         }
     }
 
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
+            // [PRODUÇÃO] Ativa R8/ProGuard para minificação de código e remoção de recursos não utilizados.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            // [OTIMIZAÇÃO DE BYTECODE] O uso de proguard-android-optimize.txt habilita otimizações 
+            // agressivas em nível de bytecode, como inlining de métodos e remoção de chamadas 
+            // virtuais desnecessárias. Isso é crucial para manter a performance em listas 
+            // complexas (LazyColumn) e árvores de composição profundas.
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 
